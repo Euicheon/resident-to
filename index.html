@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <script>
+    try {
+      document.querySelector('meta[name="color-scheme"]').content =
+        localStorage.getItem("color-scheme") ?? "light dark";
+    } catch (e) {}
+  </script>
+  <title>전공의·인턴 TO 탐색기 (2022–2027)</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Compact Unified Sticky Header -->
+    <header class="topbar">
+      <div class="topbar-row topbar-row--main">
+        <div class="topbar-left">
+          <div class="brand">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v18M3 12h18"/>
+              </svg>
+            </span>
+            <h1 class="brand-title">전공의·인턴 TO</h1>
+            <span class="brand-range" id="dataRangeLabel">2022–2027</span>
+          </div>
+
+          <nav class="nav-tabs" role="tablist" aria-label="분석 화면">
+            <button type="button" class="nav-tab is-active" role="tab" aria-selected="true" data-tab="overview">대시보드</button>
+            <button type="button" class="nav-tab" role="tab" aria-selected="false" data-tab="schools">의대별·정원</button>
+            <button type="button" class="nav-tab" role="tab" aria-selected="false" data-tab="ratio">인턴 대비 비율</button>
+            <button type="button" class="nav-tab" role="tab" aria-selected="false" data-tab="hospitals">병원별</button>
+            <button type="button" class="nav-tab" role="tab" aria-selected="false" data-tab="diff">연도별 증감</button>
+            <button type="button" class="nav-tab" role="tab" aria-selected="false" data-tab="table">전체 표</button>
+          </nav>
+        </div>
+
+        <div class="topbar-actions">
+          <div class="segmented" role="group" aria-label="직역 구분">
+            <button type="button" class="seg-btn is-active" data-type-switch="resident" aria-pressed="true">레지던트</button>
+            <button type="button" class="seg-btn" data-type-switch="intern" aria-pressed="false">인턴</button>
+          </div>
+
+          <!-- Two-state Theme Toggle (modern-web-guidance: dark-mode-toggle) -->
+          <button type="button" id="themeToggle" class="icon-btn theme-toggle" title="테마 전환">
+            <span class="theme-opt theme-opt--to-dark">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+              <span class="sr-only">다크 모드로 전환</span>
+            </span>
+            <span class="theme-opt theme-opt--to-light">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+              </svg>
+              <span class="sr-only">라이트 모드로 전환</span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Integrated Compact Control Strip: Term + Search + Presets + Filter Drawer -->
+      <div class="topbar-row topbar-row--controls">
+        <div class="term-pills" id="termPills" role="group" aria-label="모집 시기 선택"></div>
+
+        <div class="controls-right">
+          <div class="search-box">
+            <svg class="search-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input type="search" id="searchInput" placeholder="병원·과목·의대 (/)" autocomplete="off" aria-label="병원명, 과목, 의대명 검색">
+            <button type="button" id="searchClear" class="search-clear" hidden aria-label="검색어 지우기">×</button>
+          </div>
+
+          <div class="quick-presets" aria-label="빠른 필터">
+            <button type="button" class="pill" data-region-preset="metro">수도권</button>
+            <button type="button" class="pill" data-region-preset="nonmetro">비수도권</button>
+            <span class="preset-sep" aria-hidden="true"></span>
+            <button type="button" class="pill" data-dept-preset="essential">필수의료</button>
+            <button type="button" class="pill" data-dept-preset="popular">피안성정재영</button>
+          </div>
+
+          <button type="button" id="toggleFilterDrawer" class="pill filter-drawer-btn" aria-expanded="false" aria-controls="filterDrawer">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+              <path d="M3 6h18M7 12h10M10 18h4"/>
+            </svg>
+            <span>필터</span>
+            <span class="filter-badge" id="filterCountBadge" hidden>0</span>
+            <span class="drawer-caret" aria-hidden="true">▾</span>
+          </button>
+          <button type="button" id="resetFiltersBtn" class="btn-ghost" hidden>초기화</button>
+        </div>
+      </div>
+
+      <!-- Collapsible Filter Drawer (drops cleanly under header) -->
+      <div class="filter-drawer" id="filterDrawer" hidden>
+        <div class="filter-drawer-inner">
+          <div class="drawer-row drawer-row--meta">
+            <div class="filter-group">
+              <span class="filter-label">규모</span>
+              <div class="pill-group" id="sizePills" role="group" aria-label="병원 규모 필터">
+                <button type="button" class="pill is-active" data-size="all">전체</button>
+                <button type="button" class="pill" data-size="large">대형 30↑</button>
+                <button type="button" class="pill" data-size="medium">중형 10–29</button>
+                <button type="button" class="pill" data-size="small">소형 9↓</button>
+              </div>
+            </div>
+            <div class="filter-toggles">
+              <label class="toggle-chip"><input type="checkbox" id="hideZeroToggle" checked><span>TO 0 제외</span></label>
+              <label class="toggle-chip" id="extraOnlyWrap"><input type="checkbox" id="extraOnlyToggle"><span>별도정원만</span></label>
+              <label class="toggle-chip" id="newOnlyWrap"><input type="checkbox" id="newOnlyToggle"><span>2027 신규만</span></label>
+            </div>
+          </div>
+
+          <div class="drawer-row">
+            <div class="chip-row-head">
+              <span class="filter-label">지역</span>
+              <button type="button" class="preset-btn" data-region-preset="clear">해제</button>
+            </div>
+            <div class="chip-scroll" id="regionChips" role="group" aria-label="지역 필터"></div>
+          </div>
+
+          <div class="drawer-row" id="deptFilterRow">
+            <div class="chip-row-head">
+              <span class="filter-label">과목</span>
+              <button type="button" class="preset-btn" data-dept-preset="clear">해제</button>
+            </div>
+            <div class="chip-scroll" id="deptChips" role="group" aria-label="과목 필터"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Filter Tags (only visible when filters are active) -->
+      <div class="active-bar" id="activeBar" hidden>
+        <div class="active-bar-inner">
+          <span class="active-bar-label">필터:</span>
+          <div class="active-tags" id="activeTags"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Dense Workspace -->
+    <main class="main-wrap">
+      <!-- KPI Strip (Overview / Hospitals / Table) -->
+      <section class="kpi-grid" id="kpiGrid" aria-label="핵심 지표"></section>
+
+      <!-- TAB 1: Overview Dashboard -->
+      <section class="tab-panel is-active" id="panel-overview" role="tabpanel">
+        <div class="chart-grid chart-grid--overview">
+          <article class="card card--trend">
+            <header class="card-head">
+              <div class="card-head-inline">
+                <h2 class="card-title">시기별 TO 추이</h2>
+                <span class="card-sub" id="trendSub">지역·과목 1~6개 선택 시 다중 추이선</span>
+              </div>
+              <div class="card-legend" id="trendLegend"></div>
+            </header>
+            <div class="chart-box" id="chartTrend"></div>
+          </article>
+
+          <article class="card card--scale">
+            <header class="card-head">
+              <div class="card-head-inline">
+                <h2 class="card-title">병원 규모별 분포</h2>
+                <span class="card-sub">클릭 필터</span>
+              </div>
+            </header>
+            <div class="chart-box" id="chartScale"></div>
+          </article>
+
+          <article class="card">
+            <header class="card-head">
+              <div class="card-head-inline">
+                <h2 class="card-title">지역별 TO</h2>
+                <span class="card-sub">청록=수도권 · 남색=비수도권 · 클릭 필터</span>
+              </div>
+            </header>
+            <div class="chart-box" id="chartRegion"></div>
+          </article>
+
+          <article class="card" id="cardDeptChart">
+            <header class="card-head">
+              <div class="card-head-inline">
+                <h2 class="card-title" id="deptChartTitle">과목별 TO</h2>
+                <span class="card-sub" id="deptChartSub">클릭 시 과목 필터</span>
+              </div>
+            </header>
+            <div class="chart-box" id="chartDept"></div>
+          </article>
+
+          <article class="card card--full" id="cardHeatmap">
+            <header class="card-head">
+              <div class="card-head-inline">
+                <h2 class="card-title">지역 × 과목 히트맵</h2>
+                <span class="card-sub">셀 클릭 시 지역+과목 동시 필터</span>
+              </div>
+              <div class="heatmap-scale" aria-hidden="true">
+                <span>적음</span>
+                <span class="hm-swatch hm-1"></span>
+                <span class="hm-swatch hm-2"></span>
+                <span class="hm-swatch hm-3"></span>
+                <span class="hm-swatch hm-4"></span>
+                <span class="hm-swatch hm-5"></span>
+                <span>많음</span>
+              </div>
+            </header>
+            <div class="heatmap-scroll" id="chartHeatmap"></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- TAB 2: Medical Schools vs University Quota -->
+      <section class="tab-panel" id="panel-schools" role="tabpanel" hidden>
+        <div class="inline-toolbar">
+          <div class="inline-toolbar-left">
+            <span class="badge badge--large" id="schoolScopeBadge">2027 전반기 · 전체 레지던트</span>
+            <div class="pill-group" id="schoolKindPills" role="group" aria-label="설립 유형">
+              <button type="button" class="pill is-active" data-school-kind="all">전체 40개교</button>
+              <button type="button" class="pill" data-school-kind="국립">국립 10</button>
+              <button type="button" class="pill" data-school-kind="사립">사립 30</button>
+            </div>
+            <label class="select-wrap">
+              <span>비교 기준</span>
+              <select id="schoolFromTerm"></select>
+            </label>
+          </div>
+          <div class="inline-toolbar-right">
+            <span class="toolbar-hint">기존 의대 정원 3,058명 기준 · 상단 과목 필터 연동</span>
+            <button type="button" id="exportSchoolCsvBtn" class="btn-primary btn-sm">CSV</button>
+          </div>
+        </div>
+
+        <div class="kpi-grid kpi-grid--compact" id="schoolKpiGrid"></div>
+
+        <div class="chart-grid chart-grid--2">
+          <article class="card">
+            <header class="card-head">
+              <div class="card-head-inline">
+                <h2 class="card-title" id="schoolBarTitle">의대 정원 대비 TO 비율 (%)</h2>
+                <span class="card-sub">청록=사립 · 남색=국립 · 클릭 시 상세</span>
+              </div>
+            </header>
+            <div class="chart-box" id="chartSchoolBar"></div>
+          </article>
+
+          <article class="card">
+            <header class="card-head">
+              <div class="card-head-inline">
+                <h2 class="card-title" id="schoolScatterTitle">의대 정원 × 부속병원 TO</h2>
+                <span class="card-sub">등비율선 위쪽일수록 자교 TO 여유</span>
+              </div>
+            </header>
+            <div class="chart-box" id="chartSchoolScatter"></div>
+          </article>
+
+          <article class="card card--full table-card">
+            <header class="card-head table-head-bar">
+              <div class="card-head-inline">
+                <h2 class="card-title" id="schoolTableTitle">40개 의과대학 정원 vs 부속·협력병원 TO</h2>
+                <span class="card-sub" id="schoolTableSub">의대명 클릭 시 병원별 기여도·과목별 비율 상세</span>
+              </div>
+            </header>
+            <div class="table-scroll" role="region" aria-labelledby="schoolTableTitle" tabindex="0">
+              <table id="school-table" class="data-table">
+                <caption class="sr-only">전국 40개 의과대학 정원 대비 부속·협력병원 레지던트 및 인턴 TO 비교 표</caption>
+                <thead>
+                  <tr>
+                    <th scope="col" data-type="text"><button type="button" commandfor="school-table" command="--sort">의과대학<span class="sort-icon" aria-hidden="true"></span></button></th>
+                    <th scope="col" data-type="text"><button type="button" commandfor="school-table" command="--sort">구분<span class="sort-icon" aria-hidden="true"></span></button></th>
+                    <th scope="col" data-type="number" class="num-col"><button type="button" commandfor="school-table" command="--sort">의대 정원<span class="sort-icon" aria-hidden="true"></span></button></th>
+                    <th scope="col" data-type="number" class="num-col"><button type="button" commandfor="school-table" command="--sort">부속 인턴<span class="sort-icon" aria-hidden="true"></span></button></th>
+                    <th scope="col" data-type="number" class="num-col"><button type="button" commandfor="school-table" command="--sort">부속 과목 TO<span class="sort-icon" aria-hidden="true"></span></button></th>
+                    <th scope="col" data-type="number" class="num-col" aria-sort="descending"><button type="button" commandfor="school-table" command="--sort">정원 대비<span class="sort-icon" aria-hidden="true"></span></button></th>
+                    <th scope="col" data-type="number" class="num-col"><button type="button" commandfor="school-table" command="--sort">기준 대비(%p)<span class="sort-icon" aria-hidden="true"></span></button></th>
+                    <th scope="col">소속 수련병원</th>
+                    <th scope="col">추이 (23–27)</th>
+                  </tr>
+                </thead>
+                <tbody id="schoolTableBody"></tbody>
+              </table>
+            </div>
+            <div id="schoolSortStatus" class="sr-only" role="status"></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- TAB 3: Intern-to-Specialty Ratio -->
+      <section class="tab-panel" id="panel-ratio" role="tabpanel" hidden>
+        <div class="inline-toolbar">
+          <div class="inline-toolbar-left">
+            <span class="badge badge--large" id="ratioScopeBadge">2027 전반기 · 전체 레지던트</span>
+            <label class="select-wrap">
+              <span>비교 기준</span>
+              <select id="ratioFromTerm"></select>
+            </label>
+            <label class="select-wrap">
+              <span>최소 인턴</span>
+              <select id="ratioMinIntern">
+                <option value="1">1명↑</option>
+                <option value="10" selected>10명↑</option>
+                <option value="20">20명↑</option>
+                <option value="30">30명↑</option>
+              </select>
+            </label>
+            <label class="toggle-chip">
+              <input type="checkbox" id="ratioHideZeroDept" checked>
+              <span>과목 TO 0 제외</span>
+            </label>
+          </div>
+          <div class="inline-toolbar-right">
+            <span class="toolbar-hint">비율 = 과목 TO ÷ 인턴 TO × 100 · 상단 시기·과목 연동</span>
+            <button type="button" id="exportRatioCsvBtn" class="btn-primary btn-sm">CSV</button>
+          </div>
+        </div>
+
+        <div class="kpi-grid kpi-grid--compact" id="ratioKpiGrid"></div>
+
+        <div class="chart-grid chart-grid--2">
+          <article class="card">
+            <header class="card-head">
+              <div class="card-head-inline">
+                <h2 class="card-title" id="ratioBarTitle">병원별 인턴 대비 비율 TOP 20</h2>
+                <span class="card-sub">막대=현재 · 점=비교 기준 · 클릭 시 상세</span>
+              </div>
+            </header>
+            <div class="chart-box" id="chartRatioBar"></div>
+          </article>
+
+          <article class="card">
+            <header class="card-head">
+              <div class="card-head-inline">
+                <h2 class="card-title" id="ratioScatterTitle">인턴 TO × 과목 TO 분포</h2>
+                <span class="card-sub">등비율선 위쪽일수록 인턴 대비 비율 높음</span>
+              </div>
+            </header>
+            <div class="chart-box" id="chartRatioScatter"></div>
+          </article>
+
+          <article class="card card--full table-card">
+            <header class="card-head table-head-bar">
+              <div class="card-head-inline">
+                <h2 class="card-title" id="ratioTableTitle">병원별 인턴 대비 과목 비율 & 연도별 변화</h2>
+                <span class="card-sub" id="ratioTableSub">총 0개 기관</span>
+              </div>
+            </header>
+            <div class="table-scroll" role="region" aria-labelledby="ratioTableTitle" tabindex="0">
+              <table id="ratio-table" class="data-table">
+                <caption class="sr-only">병원별 인턴 TO 대비 특정 과목 비율 및 연도별 변화율 표</caption>
+                <thead>
+                  <tr>
+                    <th scope="col" data-type="text"><button type="button" commandfor="ratio-table" command="--sort">지역<span class="sort-icon" aria-hidden="true"></span></button></th>
+                    <th scope="col" data-type="text"><button type="button" commandfor="ratio-table" command="--sort">병원명<span class="sort-icon" aria-hidden="true"></span></button></th>
+                    <th scope="col" data-type="number" class="num-col"><button type="button" commandfor="ratio-table" command="--sort">인턴 TO<span class="sort-icon" aria-hidden="true"></span></button></th>
+                    <th scope="col" data-type="number" class="num-col"><button type="button" commandfor="ratio-table" command="--sort">과목 TO<span class="sort-icon" aria-hidden="true"></span></button></th>
+                    <th scope="col" data-type="number" class="num-col" aria-sort="descending"><button type="button" commandfor="ratio-table" command="--sort">현재 비율<span class="sort-icon" aria-hidden="true"></span></button></th>
+                    <th scope="col" data-type="number" class="num-col"><button type="button" commandfor="ratio-table" command="--sort">기준 비율<span class="sort-icon" aria-hidden="true"></span></button></th>
+                    <th scope="col" data-type="number" class="num-col"><button type="button" commandfor="ratio-table" command="--sort">변화폭(%p)<span class="sort-icon" aria-hidden="true"></span></button></th>
+                    <th scope="col" data-type="number" class="num-col"><button type="button" commandfor="ratio-table" command="--sort">변화율(%)<span class="sort-icon" aria-hidden="true"></span></button></th>
+                    <th scope="col">추이 (23–27)</th>
+                  </tr>
+                </thead>
+                <tbody id="ratioTableBody"></tbody>
+              </table>
+            </div>
+            <div id="ratioSortStatus" class="sr-only" role="status"></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- TAB 4: Hospital Explorer -->
+      <section class="tab-panel" id="panel-hospitals" role="tabpanel" hidden>
+        <div class="inline-toolbar">
+          <div class="inline-toolbar-left">
+            <h2 class="section-heading" id="hospitalCountHeading">병원 순위</h2>
+            <span class="toolbar-hint">클릭 시 추이·상세 · 체크박스로 최대 4개 비교</span>
+          </div>
+          <div class="inline-toolbar-right">
+            <label class="select-wrap">
+              <span>정렬</span>
+              <select id="hospitalSort">
+                <option value="to_desc">TO 많은 순</option>
+                <option value="to_asc">TO 적은 순</option>
+                <option value="delta_desc">전반기 대비 증가 순</option>
+                <option value="depts_desc">개설 과목 많은 순</option>
+                <option value="name_asc">병원명 가나다 순</option>
+              </select>
+            </label>
+            <button type="button" id="openCompareBtn" class="btn-primary btn-sm" disabled>비교 (<span id="compareCount">0</span>/4)</button>
+          </div>
+        </div>
+        <div class="hospital-grid" id="hospitalGrid"></div>
+      </section>
+
+      <!-- TAB 5: YoY Diff & 2027 Analysis -->
+      <section class="tab-panel" id="panel-diff" role="tabpanel" hidden>
+        <div class="inline-toolbar">
+          <div class="inline-toolbar-left">
+            <label class="select-wrap"><span>기준</span><select id="diffFrom"></select></label>
+            <span class="diff-arrow" aria-hidden="true">→</span>
+            <label class="select-wrap"><span>비교</span><select id="diffTo"></select></label>
+          </div>
+          <div class="inline-toolbar-right">
+            <span class="toolbar-hint">2027 PDF는 가톨릭·고려대 산하 병원이 개별 분리 공시</span>
+          </div>
+        </div>
+
+        <div class="kpi-grid kpi-grid--compact" id="diffKpiGrid"></div>
+
+        <div class="chart-grid chart-grid--2">
+          <article class="card">
+            <header class="card-head">
+              <div class="card-head-inline">
+                <h2 class="card-title">지역별 증감</h2>
+                <span class="card-sub">순증감 (명)</span>
+              </div>
+            </header>
+            <div class="chart-box" id="chartDiffRegion"></div>
+          </article>
+
+          <article class="card" id="cardDiffDept">
+            <header class="card-head">
+              <div class="card-head-inline">
+                <h2 class="card-title">과목별 증감</h2>
+                <span class="card-sub">순증감 (명)</span>
+              </div>
+            </header>
+            <div class="chart-box" id="chartDiffDept"></div>
+          </article>
+
+          <article class="card card--full">
+            <header class="card-head">
+              <div class="card-head-inline">
+                <h2 class="card-title">2027 정원 특이사항</h2>
+                <span class="card-sub">별도정원(b) · 감원(c) · 2027년 신규</span>
+              </div>
+            </header>
+            <div class="special-2027-grid" id="special2027Grid"></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- TAB 6: Full Sortable Data Table -->
+      <section class="tab-panel" id="panel-table" role="tabpanel" hidden>
+        <div class="card table-card">
+          <header class="card-head table-head-bar">
+            <div class="card-head-inline">
+              <h2 class="card-title" id="tableCaptionTitle">전체 데이터 표</h2>
+              <span class="card-sub" id="tableCountSub">총 0건</span>
+            </div>
+            <div class="table-actions">
+              <button type="button" id="exportCsvBtn" class="btn-primary btn-sm">CSV 내려받기</button>
+            </div>
+          </header>
+
+          <div class="table-scroll" role="region" aria-labelledby="tableCaptionTitle" tabindex="0">
+            <table id="data-table" class="data-table">
+              <caption class="sr-only">필터링된 전공의·인턴 정원(TO) 데이터 표</caption>
+              <thead>
+                <tr>
+                  <th scope="col" data-type="text"><button type="button" commandfor="data-table" command="--sort">시기<span class="sort-icon" aria-hidden="true"></span></button></th>
+                  <th scope="col" data-type="text"><button type="button" commandfor="data-table" command="--sort">지역<span class="sort-icon" aria-hidden="true"></span></button></th>
+                  <th scope="col" data-type="text"><button type="button" commandfor="data-table" command="--sort">병원명<span class="sort-icon" aria-hidden="true"></span></button></th>
+                  <th scope="col" data-type="text" class="col-dept"><button type="button" commandfor="data-table" command="--sort">과목<span class="sort-icon" aria-hidden="true"></span></button></th>
+                  <th scope="col" data-type="number" class="num-col" aria-sort="descending"><button type="button" commandfor="data-table" command="--sort">최종 TO<span class="sort-icon" aria-hidden="true"></span></button></th>
+                  <th scope="col" data-type="number" class="num-col col-breakdown"><button type="button" commandfor="data-table" command="--sort">기본<span class="sort-icon" aria-hidden="true"></span></button></th>
+                  <th scope="col" data-type="number" class="num-col col-breakdown"><button type="button" commandfor="data-table" command="--sort">별도<span class="sort-icon" aria-hidden="true"></span></button></th>
+                  <th scope="col" data-type="number" class="num-col col-breakdown"><button type="button" commandfor="data-table" command="--sort">감원<span class="sort-icon" aria-hidden="true"></span></button></th>
+                  <th scope="col" data-type="text"><button type="button" commandfor="data-table" command="--sort">비고<span class="sort-icon" aria-hidden="true"></span></button></th>
+                </tr>
+              </thead>
+              <tbody id="dataTableBody"></tbody>
+            </table>
+          </div>
+          <div class="table-footer" id="tableFooter"></div>
+          <div id="tableSortStatus" class="sr-only" role="status"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Shared Floating Tooltip -->
+  <div id="chartTooltip" class="chart-tooltip" hidden role="tooltip"></div>
+
+  <!-- Medical School Detail Modal -->
+  <dialog id="schoolDialog" class="modal-dialog modal-dialog--wide" closedby="any" aria-labelledby="schoolDialogTitle">
+    <div class="modal-shell">
+      <header class="modal-head">
+        <div>
+          <div class="modal-badges" id="schoolDialogBadges"></div>
+          <h2 id="schoolDialogTitle" class="modal-title">의과대학 상세</h2>
+        </div>
+        <form method="dialog"><button type="submit" class="modal-close" aria-label="닫기">×</button></form>
+      </header>
+      <div class="modal-body" id="schoolDialogBody"></div>
+    </div>
+  </dialog>
+
+  <!-- Hospital Detail Modal -->
+  <dialog id="hospitalDialog" class="modal-dialog" closedby="any" aria-labelledby="hospitalDialogTitle">
+    <div class="modal-shell">
+      <header class="modal-head">
+        <div>
+          <div class="modal-badges" id="hospitalDialogBadges"></div>
+          <h2 id="hospitalDialogTitle" class="modal-title">병원 상세</h2>
+        </div>
+        <form method="dialog"><button type="submit" class="modal-close" aria-label="닫기">×</button></form>
+      </header>
+      <div class="modal-body" id="hospitalDialogBody"></div>
+    </div>
+  </dialog>
+
+  <!-- Hospital Compare Modal -->
+  <dialog id="compareDialog" class="modal-dialog modal-dialog--wide" closedby="any" aria-labelledby="compareDialogTitle">
+    <div class="modal-shell">
+      <header class="modal-head">
+        <div>
+          <h2 id="compareDialogTitle" class="modal-title">병원 TO 비교</h2>
+          <p class="card-sub" id="compareDialogSub"></p>
+        </div>
+        <form method="dialog"><button type="submit" class="modal-close" aria-label="닫기">×</button></form>
+      </header>
+      <div class="modal-body" id="compareDialogBody"></div>
+    </div>
+  </dialog>
+
+  <script src="./data.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
