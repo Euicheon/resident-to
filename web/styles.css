@@ -997,6 +997,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, [tabindex="0"]:
 .mini-table th, .mini-table td { padding: 5px 8px; border-bottom: 1px solid var(--border); text-align: left; }
 .mini-table th { background: var(--surface-subtle); color: var(--ink-2); font-weight: 700; }
 .mini-table td.num-col, .mini-table th.num-col { text-align: right; font-variant-numeric: tabular-nums; }
+.mini-table tr.is-pinned-dept { background: var(--accent-soft); }
+.mini-table tr.is-pinned-dept td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
 
 /* Responsive */
 @media (max-width: 1024px) {

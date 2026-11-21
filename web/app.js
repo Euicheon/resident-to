@@ -1283,7 +1283,7 @@
     const resVals = TERMS.map((t) => allRecs.filter((r) => r.term === t.id && r.type === "resident").reduce((s, r) => s + r.to, 0));
     const intVals = TERMS.map((t) => allRecs.filter((r) => r.term === t.id && r.type === "intern").reduce((s, r) => s + r.to, 0));
     const maxV = Math.max(5, ...resVals, ...intVals);
-    const W = 740, H = 190, pad = { top: 22, right: 24, bottom: 32, left: 42 };
+    const W = 740, H = 195, pad = { top: 28, right: 44, bottom: 32, left: 42 };
     const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
     const xOf = (i) => pad.left + (TERMS.length === 1 ? cw / 2 : (i / (TERMS.length - 1)) * cw);
     const yOf = (v) => pad.top + ch - (v / maxV) * ch;
@@ -1309,9 +1309,16 @@
       </svg>
     `;
 
-    // Specialty table for targetTerm (and previous comparable term delta)
+    // Specialty table for targetTerm (pin selected depts in state.depts to the top!)
     const prevTermId = findComparablePrevTerm(targetTerm);
-    const curRes = allRecs.filter((r) => r.term === targetTerm && r.type === "resident").sort((a, b) => b.to - a.to || collator.compare(a.dept, b.dept));
+    const curRes = allRecs
+      .filter((r) => r.term === targetTerm && r.type === "resident")
+      .sort((a, b) => {
+        const aSel = state.depts.has(a.dept) ? 1 : 0;
+        const bSel = state.depts.has(b.dept) ? 1 : 0;
+        if (aSel !== bSel) return bSel - aSel;
+        return b.to - a.to || collator.compare(a.dept, b.dept);
+      });
     const curInt = allRecs.find((r) => r.term === targetTerm && r.type === "intern");
     const prevResMap = new Map(
       allRecs.filter((r) => r.term === prevTermId && r.type === "resident").map((r) => [r.dept, r.to])
@@ -1337,9 +1344,10 @@
             const diff = pv !== undefined ? r.to - pv : null;
             const diffStr = diff === null ? "—" : diff > 0 ? `<span style="color:var(--emerald);font-weight:700">+${diff}</span>` : diff < 0 ? `<span style="color:var(--rose);font-weight:700">${diff}</span>` : "0";
             const ratioPct = internTO > 0 ? `${((r.to / internTO) * 100).toFixed(1)}%` : "—";
+            const isSel = state.depts.has(r.dept);
             return `
-              <tr>
-                <td><strong>${esc(r.dept)}</strong></td>
+              <tr class="${isSel ? "is-pinned-dept" : ""}">
+                <td><strong>${esc(r.dept)}</strong>${isSel ? `<span class="badge badge--large" style="margin-left:5px">선택</span>` : ""}</td>
                 <td class="num-col"><strong>${fmt(r.to)}</strong></td>
                 ${internTO > 0 ? `<td class="num-col" style="color:var(--accent-strong);font-weight:650">${ratioPct}</td>` : ""}
                 ${showBreak ? `<td class="num-col">${esc(r.base ?? "—")}</td><td class="num-col">${r.extra ? `+${r.extra}` : "0"}</td>` : ""}
@@ -1409,15 +1417,21 @@
         if (r.to > 0) deptsSet.add(r.dept);
         map.set(`${r.hospital}|${r.dept}`, (map.get(`${r.hospital}|${r.dept}`) || 0) + r.to);
       }
-      const depts = [...deptsSet].sort((a, b) => collator.compare(a, b));
+      const depts = [...deptsSet].sort((a, b) => {
+        const aSel = state.depts.has(a) ? 1 : 0;
+        const bSel = state.depts.has(b) ? 1 : 0;
+        if (aSel !== bSel) return bSel - aSel;
+        return collator.compare(a, b);
+      });
       const totals = hosps.map((h) => depts.reduce((s, d) => s + (map.get(`${h}|${d}`) || 0), 0));
       const head = `<tr><th>과목</th>${hosps.map((h) => `<th class="num-col">${esc(h)}</th>`).join("")}</tr>`;
       const totalRow = `<tr style="background:var(--accent-soft)"><td><strong>합계</strong></td>${totals.map((v) => `<td class="num-col"><strong>${fmt(v)}</strong></td>`).join("")}</tr>`;
       const rowsHtml = depts.map((d) => {
         const vals = hosps.map((h) => map.get(`${h}|${d}`) || 0);
         const maxV = Math.max(...vals);
+        const isSel = state.depts.has(d);
         const cols = vals.map((v) => `<td class="num-col">${v > 0 ? (v === maxV && maxV > 0 ? `<strong style="color:var(--accent-strong)">${v}</strong>` : v) : "—"}</td>`).join("");
-        return `<tr><td>${esc(d)}</td>${cols}</tr>`;
+        return `<tr class="${isSel ? "is-pinned-dept" : ""}"><td>${esc(d)}${isSel ? `<span class="badge badge--large" style="margin-left:5px">선택</span>` : ""}</td>${cols}</tr>`;
       }).join("");
       body.innerHTML = `<table class="mini-table"><thead>${head}</thead><tbody>${totalRow}${rowsHtml}</tbody></table>`;
     }
@@ -2202,7 +2216,7 @@
     const resVals = TERMS.map((t) => schoolRecs.filter((r) => r.term === t.id && r.type === "resident").reduce((s, r) => s + r.to, 0));
     const intVals = TERMS.map((t) => schoolRecs.filter((r) => r.term === t.id && r.type === "intern").reduce((s, r) => s + r.to, 0));
     const maxV = Math.max(sc.quota * 1.15, ...resVals, ...intVals, 10);
-    const W = 760, H = 195, pad = { top: 22, right: 24, bottom: 32, left: 46 };
+    const W = 760, H = 200, pad = { top: 28, right: 44, bottom: 32, left: 46 };
     const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
     const xOf = (i) => pad.left + (TERMS.length === 1 ? cw / 2 : (i / (TERMS.length - 1)) * cw);
     const yOf = (v) => pad.top + ch - (v / maxV) * ch;
@@ -2243,7 +2257,14 @@
       if (r.term !== targetTerm || r.type !== "resident" || !r.dept) continue;
       deptMap.set(r.dept, (deptMap.get(r.dept) || 0) + r.to);
     }
-    const deptList = [...deptMap.entries()].filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+    const deptList = [...deptMap.entries()]
+      .filter(([d, v]) => v > 0 || state.depts.has(d))
+      .sort((a, b) => {
+        const aSel = state.depts.has(a[0]) ? 1 : 0;
+        const bSel = state.depts.has(b[0]) ? 1 : 0;
+        if (aSel !== bSel) return bSel - aSel;
+        return b[1] - a[1] || collator.compare(a[0], b[0]);
+      });
 
     document.getElementById("schoolDialogBody").innerHTML = `
       <div>
@@ -2287,13 +2308,16 @@
           <table class="mini-table">
             <thead><tr><th>과목</th><th class="num-col">합산 TO</th><th class="num-col">의대 정원 대비</th></tr></thead>
             <tbody>
-              ${deptList.map(([d, v]) => `
-                <tr>
-                  <td><strong>${esc(d)}</strong></td>
+              ${deptList.map(([d, v]) => {
+                const isSel = state.depts.has(d);
+                return `
+                <tr class="${isSel ? "is-pinned-dept" : ""}">
+                  <td><strong>${esc(d)}</strong>${isSel ? `<span class="badge badge--large" style="margin-left:5px">선택</span>` : ""}</td>
                   <td class="num-col">${fmt(v)}명</td>
                   <td class="num-col" style="color:var(--accent-strong);font-weight:700">${((v / sc.quota) * 100).toFixed(1)}%</td>
                 </tr>
-              `).join("") || `<tr><td colspan="3">해당 시기 레지던트 데이터 없음</td></tr>`}
+              `;
+              }).join("") || `<tr><td colspan="3">해당 시기 레지던트 데이터 없음</td></tr>`}
             </tbody>
           </table>
         </div>
