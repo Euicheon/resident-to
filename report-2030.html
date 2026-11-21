@@ -1,0 +1,1420 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <script>
+    try {
+      document.querySelector('meta[name="color-scheme"]').content =
+        localStorage.getItem("color-scheme") ?? "light dark";
+    } catch (e) {}
+  </script>
+  <title>2030년 레지던트 TO 심층 분석 리포트</title>
+  <meta name="description" content="2023–2027 수련환경평가위원회 공식 정원 10,562건을 바탕으로 분석한 2030년 레지던트 TO 구조적 동인, 병원별 증감 메커니즘, 3대 시나리오">
+  <style>
+    :root {
+      color-scheme: light dark;
+      &:has(> head > meta[name="color-scheme"][content="dark"]) { color-scheme: dark; }
+      &:has(> head > meta[name="color-scheme"][content="light"]) { color-scheme: light; }
+
+      --bg: light-dark(#f8fafc, #0b0f14);
+      --surface: light-dark(#ffffff, #121821);
+      --subtle: light-dark(#f1f5f9, #171f2b);
+      --border: light-dark(#e2e8f0, #232e3f);
+      --border-strong: light-dark(#cbd5e1, #34445b);
+
+      --ink: light-dark(#0f172a, #f1f5f9);
+      --ink-2: light-dark(#334155, #cbd5e1);
+      --ink-3: light-dark(#64748b, #94a3b8);
+
+      --teal: light-dark(#0d9488, #2dd4bf);
+      --teal-strong: light-dark(#0f766e, #5eead4);
+      --teal-soft: light-dark(rgba(13, 148, 136, 0.10), rgba(45, 212, 191, 0.14));
+
+      --indigo: light-dark(#4f46e5, #818cf8);
+      --indigo-soft: light-dark(rgba(79, 70, 229, 0.10), rgba(129, 140, 248, 0.15));
+
+      --amber: light-dark(#d97706, #fbbf24);
+      --amber-soft: light-dark(rgba(217, 119, 6, 0.12), rgba(251, 191, 36, 0.16));
+
+      --rose: light-dark(#e11d48, #fb7185);
+      --rose-soft: light-dark(rgba(225, 29, 72, 0.11), rgba(251, 113, 133, 0.16));
+
+      --emerald: light-dark(#059669, #34d399);
+      --emerald-soft: light-dark(rgba(5, 150, 105, 0.11), rgba(52, 211, 153, 0.16));
+
+      --shadow-sm: light-dark(0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(0, 0, 0, 0.35));
+      --shadow-md: light-dark(0 8px 24px rgba(15, 23, 42, 0.07), 0 10px 28px rgba(0, 0, 0, 0.45));
+      --font-sans: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.72;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--teal-strong); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    button:focus-visible, a:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+    .num { font-variant-numeric: tabular-nums; }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; margin: -1px;
+      overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+    }
+
+    /* Theme toggle icons (CSS-only) */
+    .theme-opt { display: none; align-items: center; justify-content: center; }
+    .theme-opt--to-dark { display: inline-flex; }
+    .theme-opt--to-light { display: none; }
+    @media (prefers-color-scheme: dark) {
+      :root:not(:has(> head > meta[name="color-scheme"][content="light"])) .theme-opt--to-dark { display: none; }
+      :root:not(:has(> head > meta[name="color-scheme"][content="light"])) .theme-opt--to-light { display: inline-flex; }
+    }
+    :root:has(> head > meta[name="color-scheme"][content="dark"]) .theme-opt--to-dark { display: none; }
+    :root:has(> head > meta[name="color-scheme"][content="dark"]) .theme-opt--to-light { display: inline-flex; }
+
+    /* Sticky Top Nav + Reading Progress */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: color-mix(in srgb, var(--surface) 88%, transparent);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    .progress-bar {
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      height: 2px;
+      width: 0%;
+      background: linear-gradient(90deg, var(--teal), var(--indigo));
+      transition: width 0.08s linear;
+    }
+    .top-nav-inner {
+      max-width: 1020px;
+      margin: 0 auto;
+      padding: 8px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .nav-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--ink-2);
+      padding: 4px 9px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      white-space: nowrap;
+    }
+    .nav-back:hover { text-decoration: none; border-color: var(--teal); color: var(--teal-strong); }
+
+    .toc-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+      font-weight: 650;
+    }
+    .toc-links a {
+      color: var(--ink-3);
+      padding: 4px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    .toc-links a:hover, .toc-links a.is-current {
+      color: var(--teal-strong);
+      background: var(--teal-soft);
+      text-decoration: none;
+    }
+
+    .icon-btn {
+      width: 30px; height: 30px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--ink-2);
+      display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .icon-btn:hover { border-color: var(--teal); color: var(--ink); }
+
+    /* Hero Header */
+    .hero {
+      max-width: 1020px;
+      margin: 0 auto;
+      padding: 36px 18px 20px;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      font-weight: 750;
+      color: var(--teal-strong);
+      background: var(--teal-soft);
+      padding: 3px 10px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+    }
+    .hero h1 {
+      margin: 0 0 12px;
+      font-size: clamp(26px, 4vw, 38px);
+      font-weight: 850;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+    }
+    .hero-lead {
+      margin: 0 0 22px;
+      font-size: 16px;
+      color: var(--ink-2);
+      max-width: 780px;
+      line-height: 1.65;
+    }
+    .hero-kpi-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .hero-kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 13px 15px;
+      box-shadow: var(--shadow-sm);
+    }
+    .hero-kpi-lbl { font-size: 11.5px; font-weight: 700; color: var(--ink-3); }
+    .hero-kpi-val { font-size: 22px; font-weight: 850; letter-spacing: -0.025em; margin: 3px 0 2px; font-variant-numeric: tabular-nums; }
+    .hero-kpi-sub { font-size: 11.5px; color: var(--ink-2); }
+
+    /* Article Body */
+    .report-main {
+      max-width: 1020px;
+      margin: 0 auto;
+      padding: 10px 18px 64px;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+    }
+
+    .chapter {
+      scroll-margin-top: 64px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .chapter-head {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+    .chapter-num {
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 2px;
+    }
+    .chapter-head h2 {
+      margin: 0;
+      font-size: clamp(20px, 2.5vw, 24px);
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      line-height: 1.3;
+    }
+    .chapter-summary {
+      margin: 6px 0 0;
+      font-size: 14px;
+      color: var(--ink-2);
+    }
+
+    .prose {
+      max-width: 820px;
+      color: var(--ink-2);
+      margin: 0;
+    }
+    .prose strong { color: var(--ink); font-weight: 750; }
+
+    /* Callout Box */
+    .callout {
+      border-left: 3.5px solid var(--teal);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      border-radius: 0 11px 11px 0;
+      padding: 13px 16px;
+      font-size: 13.5px;
+      color: var(--ink-2);
+      box-shadow: var(--shadow-sm);
+    }
+    .callout--amber { border-left-color: var(--amber); }
+    .callout strong { color: var(--ink); }
+
+    /* Viz Card */
+    .viz-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 18px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .viz-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .viz-title { margin: 0; font-size: 15px; font-weight: 800; letter-spacing: -0.015em; }
+    .viz-sub { margin: 2px 0 0; font-size: 12px; color: var(--ink-3); }
+    .viz-box svg { width: 100%; height: auto; display: block; }
+
+    /* Segmented Tabs inside Viz / Chapters */
+    .seg-tabs {
+      display: inline-flex;
+      gap: 3px;
+      padding: 3px;
+      border-radius: 9px;
+      background: var(--subtle);
+      border: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .seg-tab {
+      border: 0;
+      background: transparent;
+      padding: 5px 11px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-3);
+      white-space: nowrap;
+    }
+    .seg-tab:hover { color: var(--ink); }
+    .seg-tab.is-active {
+      background: var(--surface);
+      color: var(--teal-strong);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Two-column Insight Cards */
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .insight-grid--3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .insight-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 15px 16px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .insight-card h3 {
+      margin: 0;
+      font-size: 14.5px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .insight-card p {
+      margin: 0;
+      font-size: 13.5px;
+      color: var(--ink-2);
+      line-height: 1.62;
+    }
+
+    /* Pills & Badges */
+    .pill-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+    .pill-teal { background: var(--teal-soft); color: var(--teal-strong); }
+    .pill-indigo { background: var(--indigo-soft); color: var(--indigo); }
+    .pill-amber { background: var(--amber-soft); color: var(--amber); }
+    .pill-rose { background: var(--rose-soft); color: var(--rose); }
+    .pill-emerald { background: var(--emerald-soft); color: var(--emerald); }
+
+    /* Compact Hospital Group Table */
+    .clean-table-wrap { overflow-x: auto; }
+    .clean-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .clean-table th, .clean-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+    .clean-table th {
+      font-size: 11.5px;
+      font-weight: 750;
+      color: var(--ink-3);
+      background: var(--subtle);
+      white-space: nowrap;
+    }
+    .clean-table td.num, .clean-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .clean-table tbody tr:hover { background: var(--subtle); }
+
+    /* Scenario Bars */
+    .scenario-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .sc-row {
+      display: grid;
+      grid-template-columns: 165px 1fr 120px;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+    }
+    .sc-label { font-weight: 750; }
+    .sc-track {
+      height: 12px;
+      border-radius: 999px;
+      background: var(--subtle);
+      position: relative;
+      overflow: hidden;
+    }
+    .sc-center {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 1.5px;
+      background: var(--border-strong);
+    }
+    .sc-fill {
+      position: absolute;
+      top: 2px;
+      bottom: 2px;
+      border-radius: 999px;
+      transition: left 0.25s ease, width 0.25s ease, background 0.25s ease;
+    }
+    .sc-note { font-size: 12px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* Checklist */
+    .check-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .check-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      box-shadow: var(--shadow-sm);
+    }
+    .check-num {
+      width: 26px; height: 26px;
+      border-radius: 8px;
+      background: var(--teal-soft);
+      color: var(--teal-strong);
+      font-weight: 850;
+      font-size: 13px;
+      display: grid; place-items: center;
+      flex-shrink: 0;
+    }
+    .check-item h4 { margin: 0 0 4px; font-size: 14px; font-weight: 800; }
+    .check-item p { margin: 0; font-size: 13px; color: var(--ink-2); line-height: 1.58; }
+
+    /* Tooltip */
+    .tip {
+      position: fixed;
+      z-index: 100;
+      pointer-events: none;
+      background: light-dark(#0f172a, #f8fafc);
+      color: light-dark(#f8fafc, #0f172a);
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.45;
+      box-shadow: var(--shadow-md);
+      max-width: 260px;
+    }
+    .tip strong { display: block; margin-bottom: 2px; }
+
+    .report-footer {
+      max-width: 1020px;
+      margin: 0 auto;
+      padding: 18px 18px 36px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--ink-3);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    @media (max-width: 820px) {
+      .hero-kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .insight-grid, .insight-grid--3, .check-list { grid-template-columns: 1fr; }
+      .toc-links { display: none; }
+      .sc-row { grid-template-columns: 120px 1fr 90px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sticky Top Nav -->
+  <header class="top-nav">
+    <div class="top-nav-inner">
+      <a class="nav-back" href="./index.html">← TO 탐색기 대시보드</a>
+      <nav class="toc-links" aria-label="리포트 목차">
+        <a href="#sec-why">1. 왜 2030년인가</a>
+        <a href="#sec-macro">2. 3단계 비대칭 재편</a>
+        <a href="#sec-hospitals">3. 병원군별 해부</a>
+        <a href="#sec-depts">4. 과목별 지형</a>
+        <a href="#sec-scenarios">5. 2030 시나리오</a>
+        <a href="#sec-check">6. 선행 지표</a>
+      </nav>
+      <button type="button" id="themeToggle" class="icon-btn" title="테마 전환">
+        <span class="theme-opt theme-opt--to-dark">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <span class="sr-only">다크 모드로 전환</span>
+        </span>
+        <span class="theme-opt theme-opt--to-light">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="5"/>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+          <span class="sr-only">라이트 모드로 전환</span>
+        </span>
+      </button>
+    </div>
+    <div class="progress-bar" id="progressBar"></div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-eyebrow">STRATEGIC OUTLOOK · 2023–2027 공식 정원 10,562건 기반</div>
+    <h1>2030년 레지던트 TO 심층 분석</h1>
+    <p class="hero-lead">
+      2030년은 <strong>2025년 하반기 복귀 기수의 연차 중첩 족쇄가 풀리는 첫해</strong>이자, <strong>2031년 24·25학번 더블링 쓰나미의 바로 직전 해</strong>입니다.
+      단정적 예측 대신 5개년 공식 정원 데이터 속에 숨은 구조적 신호들을 해부해, 병원별·과목별 증감 원인과 2030년 3대 시나리오를 정리했습니다.
+    </p>
+
+    <div class="hero-kpi-strip">
+      <div class="hero-kpi">
+        <div class="hero-kpi-lbl">수도권 비중 변화 (23→27)</div>
+        <div class="hero-kpi-val" style="color:var(--teal-strong)">61.9% → 49.6%</div>
+        <div class="hero-kpi-sub">전 과목군 50:50 동시 역전</div>
+      </div>
+      <div class="hero-kpi">
+        <div class="hero-kpi-lbl">2026 쇼크 → 2027 복원</div>
+        <div class="hero-kpi-val" style="color:var(--rose)">-810 → +505명</div>
+        <div class="hero-kpi-sub">비수도권 96~112% vs 수도권 87%</div>
+      </div>
+      <div class="hero-kpi">
+        <div class="hero-kpi-lbl">레지던트 / 인턴 비율</div>
+        <div class="hero-kpi-val" style="color:var(--amber)">106.4% → 97.5%</div>
+        <div class="hero-kpi-sub">2027년 사상 첫 100% 하회</div>
+      </div>
+      <div class="hero-kpi">
+        <div class="hero-kpi-lbl">2031 더블링 추정 인턴 수요</div>
+        <div class="hero-kpi-val" style="color:var(--indigo)">~5,450명</div>
+        <div class="hero-kpi-sub">현행 인턴 TO(3,374명) 대비 +2,000↑</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <main class="report-main">
+
+    <!-- CHAPTER 1: Why 2030 -->
+    <section class="chapter" id="sec-why">
+      <div class="chapter-head">
+        <div class="chapter-num">Chapter 01</div>
+        <h2>왜 하필 '2030년'인가? — 두 개의 거대한 톱니바퀴가 맞물리는 해</h2>
+        <p class="chapter-summary">연차 중첩 해소(증원 압력) × 2031 더블링 전야(선제 확대 압력) × 구조전환 정착(억제 압력)이 정면으로 충돌합니다.</p>
+      </div>
+
+      <div class="viz-card">
+        <div class="viz-head">
+          <div>
+            <h3 class="viz-title">2023–2031 수련 수급 타임라인과 2030년 이중 변곡점</h3>
+            <p class="viz-sub">2025년 9월 복귀 기수의 3·4년제 수료 시점과 2031년 더블링 충돌 지점</p>
+          </div>
+        </div>
+        <div class="viz-box" id="vizTimeline"></div>
+      </div>
+
+      <div class="insight-grid insight-grid--3">
+        <div class="insight-card">
+          <h3><span>① 연차 중첩 족쇄 해제</span><span class="pill-tag pill-emerald">복원 압력</span></h3>
+          <p>2025년 하반기(9월) 복귀·입국 R1이 <strong>3년제 과목은 2028년 8월, 4년제 과목은 2029년 8월</strong> 수료합니다. 2026년 기본정원 -778명 급감의 주원인이었던 '재원 전공의 포화(지도전문의 대비 상한)'가 완전히 풀리는 첫 입국 시점이 바로 <strong>2030년 3월</strong>입니다.</p>
+        </div>
+        <div class="insight-card">
+          <h3><span>② 2031 더블링 직전 해</span><span class="pill-tag pill-indigo">선제 확대</span></h3>
+          <p>24·25학번 더블링 세대의 신규 인턴 수요(추정 ~5,450명)가 2031년 3월 들이닥칩니다. 정부와 수평위가 수련 대란을 막기 위해 <strong>다기관 협력수련과 한시적 별도정원</strong>을 미리 테스트·확장할지 결정해야 하는 마지막 준비 연도가 2030년입니다.</p>
+        </div>
+        <div class="insight-card">
+          <h3><span>③ 구조전환 정규화 3년 차</span><span class="pill-tag pill-rose">억제 압력</span></h3>
+          <p>상급종합병원 구조전환 지원사업은 <strong>2027년 12월</strong> 종료 후 정규 평가·수가 체계로 편입됩니다. 병상 감축(5~15%)과 전문의·PA 체제가 이미 3년 이상 자리 잡으면, 대형병원이 굳이 과거 수준의 전공의 정원을 되찾으려 하지 않을 관성이 작용합니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHAPTER 2: 3-Stage Asymmetric Shift -->
+    <section class="chapter" id="sec-macro">
+      <div class="chapter-head">
+        <div class="chapter-num">Chapter 02</div>
+        <h2>2023–2027 데이터가 폭로한 '3단계 비대칭 재편'</h2>
+        <p class="chapter-summary">Big 5는 2025년까지 버텼다. 진짜 판을 뒤집은 것은 '2026년 동반 급감 → 2027년 비수도권 우선 복원'이었다.</p>
+      </div>
+
+      <div class="viz-card">
+        <div class="viz-head">
+          <div>
+            <h3 class="viz-title">5개년 전국 레지던트 TO 추이: 수도권 vs 비수도권 & 레지던트/인턴 비율</h3>
+            <p class="viz-sub">막대 위에 마우스를 올리면 기본정원(A)·별도정원(B)·비중 상세를 볼 수 있습니다</p>
+          </div>
+          <div style="display:flex;gap:12px;font-size:11.5px;color:var(--ink-3)">
+            <span><strong style="color:var(--teal)">■</strong> 수도권</span>
+            <span><strong style="color:var(--indigo)">■</strong> 비수도권</span>
+            <span><strong style="color:var(--amber)">●</strong> 레지던트/인턴 비율(%)</span>
+          </div>
+        </div>
+        <div class="viz-box" id="vizMacro"></div>
+      </div>
+
+      <div class="callout">
+        <strong>핵심 발견 — 50:50 수렴은 '전 과목군'에서 기계적으로 동시에 일어났다:</strong>
+        2023→2027년 수도권 비중은 필수의료 6과(62%→49%)뿐 아니라 <strong>인기 6과(피·안·성·정·재·영 63%→50%)</strong>, 마취·정신·신경·신외·이비인후(60%→50%), 진료지원과(70%→48%), 가정의학과(63%→50%)까지 예외 없이 50% 선으로 눌렸습니다.
+      </div>
+
+      <!-- Viz 3: Base(A) True Winners vs Extra(B) Vulnerable -->
+      <div class="viz-card">
+        <div class="viz-head">
+          <div>
+            <h3 class="viz-title" id="vizBaseTitle">기본정원(A) 자체가 성장한 진짜 승자 vs 별도정원(B) 연명 취약군</h3>
+            <p class="viz-sub" id="vizBaseSub">기본정원(A)은 교수진·실적 기반이라 견고하지만, 별도정원(B)은 정책 평가 시 회수 위험이 큽니다</p>
+          </div>
+          <div class="seg-tabs" role="tablist" aria-label="기본정원 대 별도정원 보기">
+            <button type="button" class="seg-tab is-active" data-base-mode="winners">진짜 승자 (기본정원 순증)</button>
+            <button type="button" class="seg-tab" data-base-mode="vulnerable">취약군 (기본 잠식 + 별도 연명)</button>
+          </div>
+        </div>
+        <div class="viz-box" id="vizBaseExtra"></div>
+      </div>
+
+      <!-- Viz 4: Funnel Dumbbell Chart -->
+      <div class="viz-card">
+        <div class="viz-head">
+          <div>
+            <h3 class="viz-title">병원별 '자교 인턴 → 레지던트 깔때기' 대역전 (2023 → 2027)</h3>
+            <p class="viz-sub">빈 원=2023년 레/인 비율(%) · 채운 원=2027년 비율(%) · 점선=100% (인턴 수 = 레지던트 수)</p>
+          </div>
+        </div>
+        <div class="viz-box" id="vizFunnel"></div>
+        <p class="prose" style="font-size:13.5px">
+          수도권 중형 사립대병원은 인턴 정원은 거의 유지된 채 레지던트만 30~45% 깎이면서, <strong>자교 인턴의 15~33%가 물리적으로 자병원 레지던트에 진입할 수 없는 좁은 깔때기(67~87%)</strong>로 바뀌었습니다. 반면 부산대(146%)·칠곡경북대(137%)·해운대백(137%)·경북대(125%)는 인턴보다 레지던트가 훨씬 많아 외부 인턴을 흡수하는 구조로 전환되었습니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- CHAPTER 3: Hospital Group Deep Dive -->
+    <section class="chapter" id="sec-hospitals">
+      <div class="chapter-head">
+        <div class="chapter-num">Chapter 03</div>
+        <h2>병원군별 정밀 해부: 왜 깎였나, 왜 늘었나, 2030년은?</h2>
+        <p class="chapter-summary">6개 병원군 탭을 눌러 각 그룹의 5개년 궤적, 증감 원인, 그리고 2030년 핵심 분기점을 확인하세요.</p>
+      </div>
+
+      <div class="viz-card">
+        <div class="seg-tabs" id="groupTabs" role="tablist" aria-label="병원군 선택">
+          <button type="button" class="seg-tab is-active" data-group="big5">① Big 5 본원</button>
+          <button type="button" class="seg-tab" data-group="metroMid">② 수도권 중형 사립</button>
+          <button type="button" class="seg-tab" data-group="newBranch">③ 수도권 신축 분원</button>
+          <button type="button" class="seg-tab" data-group="national">④ 비수도권 거점국립</button>
+          <button type="button" class="seg-tab" data-group="nonMetroPriv">⑤ 비수도권 사립·2차</button>
+          <button type="button" class="seg-tab" data-group="public">⑥ 공공·특수병원</button>
+        </div>
+        <div id="groupDetailBox"></div>
+      </div>
+
+      <div class="callout callout--amber">
+        <strong>격년제(턴제) vs 구조적 0명 절벽 분리 결과:</strong>
+        5개년 연속 패턴(23-24-25-26-27)을 전수 확인한 결과, 단순 격년제(<code>1-0-1-0</code>)는 전국 16건에 불과했습니다. 수도권 중형병원의 0명화는 대부분 <strong>2023~2025년 연속 1~2명 → 2026~2027년 0명</strong>으로 꺾인 구조적 절벽입니다. 이 중 <strong>2027년 첫 0명(<code>1-1-1-1-0</code>)</strong> 과목(인하대 영상, 성빈센트 안과·피부·성형·재활, 고대안산 안과·성형, 이대목동 피부·이비인후, 보라매 안과)은 2028~2030년 1명 복원 가능성이 높지만, <strong>2년 연속 0명(<code>1-1-1-0-0</code>)</strong> 과목(가천대길 병리·방종·핵의학, 인천성모 방종·핵의학 등)은 수련 지정 영구 반납 기로에 서 있습니다.
+      </div>
+    </section>
+
+    <!-- CHAPTER 4: Specialty Quadrant -->
+    <section class="chapter" id="sec-depts">
+      <div class="chapter-head">
+        <div class="chapter-num">Chapter 04</div>
+        <h2>과목별 2030년 지형도: 어디가 눌려있고, 어디가 줄어드나?</h2>
+        <p class="chapter-summary">2025년 피크 대비 회복률(X축)과 5개년 총량 변화율(Y축)으로 본 24개 임상과목의 4분면 위치</p>
+      </div>
+
+      <div class="viz-card">
+        <div class="viz-head">
+          <div>
+            <h3 class="viz-title">24개 과목 4분면 버블 차트: 2025 피크 대비 2027 회복률 × 2023→2027 증감률</h3>
+            <p class="viz-sub">버블 크기=2027 TO · 청록=3년제 과목 · 남색=4년제 과목 · 마우스를 올려 상세 확인</p>
+          </div>
+        </div>
+        <div class="viz-box" id="vizDeptQuad"></div>
+      </div>
+
+      <div class="insight-grid">
+        <div class="insight-card">
+          <h3><span>4년제 중증 필수 미복원군 (반등 잠재력 최대)</span><span class="pill-tag pill-indigo">신경·응급·산부인과·신외</span></h3>
+          <p><strong>신경과(회복률 79.5%)·응급(84.4%)·산부인과(86.7%)·신경외과(87.4%)</strong>는 2025년 피크 대비 가장 덜 회복된 4년제 과목들입니다. 2025 하반기 복귀생이 2029년 8월 수료하며 연차 중첩이 풀리는 <strong>2030년에 반등 탄력이 가장 강하게 작용할 후보군</strong>입니다.</p>
+        </div>
+        <div class="insight-card">
+          <h3><span>구조적 축소·대형병원 집중군</span><span class="pill-tag pill-rose">가정·병리·핵의학·방종</span></h3>
+          <p><strong>가정의학과(-77명)</strong>는 2차 단과 수련병원 퇴조와 미충원 별도정원 축소로 급감했고, <strong>병리(-22명)·핵의학(회복률 78.6%)·방종·진검</strong>은 AI/자동화·외주화·교수 부족으로 0명 기관이 12~29곳에 달합니다. 2030년에는 초대형 병원으로 더 쏠릴 가능성이 높습니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHAPTER 5: Interactive 2030 Scenario Simulator -->
+    <section class="chapter" id="sec-scenarios">
+      <div class="chapter-head">
+        <div class="chapter-num">Chapter 05</div>
+        <h2>2030년 레지던트 TO 3대 시나리오 (인터랙티브 비교)</h2>
+        <p class="chapter-summary">단정 대신 핵심 정책·수급 조건에 따라 6개 병원군이 어떻게 갈리는지 시나리오별로 비교해 보세요.</p>
+      </div>
+
+      <div class="viz-card">
+        <div class="viz-head">
+          <div>
+            <h3 class="viz-title" id="scTitle">현실 혼합 경로 (28–29 선별 재편 → 30–31 한시 확대)</h3>
+            <p class="viz-sub" id="scSub">기본정원 5:5 틀은 유지하되, 부실과목 정리 후 2030–2031 더블링 압력을 별도정원(B)으로 흡수</p>
+          </div>
+          <div class="seg-tabs" id="scenarioTabs" role="tablist" aria-label="2030 시나리오 선택">
+            <button type="button" class="seg-tab is-active" data-sc="mixed">혼합 경로 (유력)</button>
+            <button type="button" class="seg-tab" data-sc="A">A. 현행 고착</button>
+            <button type="button" class="seg-tab" data-sc="B">B. 선제 확대</button>
+            <button type="button" class="seg-tab" data-sc="C">C. 수련질 재편</button>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;padding:10px 12px;border-radius:9px;background:var(--subtle);font-size:13px" id="scMetaStrip"></div>
+
+        <div class="scenario-bars" id="scenarioBars"></div>
+
+        <p class="prose" id="scNarrative" style="font-size:13.5px;margin-top:4px"></p>
+      </div>
+    </section>
+
+    <!-- CHAPTER 6: Actionable Leading Indicators -->
+    <section class="chapter" id="sec-check">
+      <div class="chapter-head">
+        <div class="chapter-num">Chapter 06</div>
+        <h2>2028–2029 정원 공시에서 반드시 확인할 선행 지표 4가지</h2>
+        <p class="chapter-summary">매년 10~11월 수평위 정원표가 나올 때 아래 4가지만 체크하면 2030년 향방을 가장 빠르게 읽을 수 있습니다.</p>
+      </div>
+
+      <div class="check-list">
+        <div class="check-item">
+          <div class="check-num">1</div>
+          <div>
+            <h4>2027년 별도정원(B)의 기본정원(A) 승격 여부</h4>
+            <p><code>기본 0 + 별도 1</code>로 버티는 과목(서울의료원 5과, 중앙보훈 6과, 분당차 흉부외과 등)이 2028~2029년에 기본정원으로 올라오면 2030년 생존 신호, 그대로거나 0이 되면 회수 신호입니다.</p>
+          </div>
+        </div>
+        <div class="check-item">
+          <div class="check-num">2</div>
+          <div>
+            <h4>2027년 첫 0명(<code>1-1-1-1-0</code>) 과목의 즉각 복귀</h4>
+            <p>인하대 영상, 성빈센트 안과·피부·성형·재활, 고대안산 안과·성형, 이대목동 피부·이비인후 등이 2028년에 바로 1명으로 돌아오면 일시적 눌림이었고, 2년 연속 0명이면 영구 축소 수순입니다.</p>
+          </div>
+        </div>
+        <div class="check-item">
+          <div class="check-num">3</div>
+          <div>
+            <h4>'2027년 신규 지정' 과목의 실배정 전환</h4>
+            <p>중앙대광명(피부·진검), 광주기독(외과), 국군수도(성형), 대자인병원(내과) 등 0명으로 지정 티켓을 먼저 딴 과목들이 2028–2029년에 실제 1명을 받기 시작하면 2030년 확장 트랙 진입 신호입니다.</p>
+          </div>
+        </div>
+        <div class="check-item">
+          <div class="check-num">4</div>
+          <div>
+            <h4>자교 인턴 대비 레지던트 비율 (깔때기 추세)</h4>
+            <p>인턴 병원 선택 시 2023년의 기억이 아니라, 이미 70~87%로 좁아진 수도권 중형병원 깔때기가 회복되는지, 125~146%의 비수도권 거점 우위가 유지되는지를 <a href="./index.html">TO 탐색기</a>에서 추적하세요.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="report-footer">
+    <span>데이터 출처: 보건복지부·수련환경평가위원회(수평위) 2023–2027 공식 연간 정원표 (10,562건, 개별 수련병원·사후정원 제외 기준)</span>
+    <a href="./index.html">전공의·인턴 TO 탐색기 대시보드 열기 →</a>
+  </footer>
+
+  <div id="tip" class="tip" hidden role="tooltip"></div>
+
+  <script>
+  (() => {
+    "use strict";
+
+    // =========================================================================
+    // Theme Toggle (modern-web-guidance: dark-mode-toggle)
+    // =========================================================================
+    const metaCS = document.querySelector('meta[name="color-scheme"]');
+    const getSys = () => window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    const getStored = () => { try { const v = localStorage.getItem("color-scheme"); return v === "light" || v === "dark" ? v : null; } catch { return null; } };
+    document.getElementById("themeToggle").addEventListener("click", () => {
+      const sys = getSys();
+      const cur = getStored() ?? sys;
+      const nxt = cur === "dark" ? "light" : "dark";
+      try {
+        if (nxt === sys) { localStorage.removeItem("color-scheme"); metaCS.content = "light dark"; }
+        else { localStorage.setItem("color-scheme", nxt); metaCS.content = nxt; }
+      } catch { metaCS.content = nxt === sys ? "light dark" : nxt; }
+    });
+    window.addEventListener("storage", (e) => { if (e.key === "color-scheme") metaCS.content = getStored() ?? "light dark"; });
+
+    // Reading progress & active TOC
+    const progressEl = document.getElementById("progressBar");
+    const tocLinks = [...document.querySelectorAll(".toc-links a")];
+    const sections = tocLinks.map((a) => document.querySelector(a.getAttribute("href")));
+    window.addEventListener("scroll", () => {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      progressEl.style.width = `${h > 0 ? Math.min(100, (window.scrollY / h) * 100) : 0}%`;
+      let curIdx = 0;
+      sections.forEach((sec, i) => { if (sec && sec.getBoundingClientRect().top <= 120) curIdx = i; });
+      tocLinks.forEach((a, i) => a.classList.toggle("is-current", i === curIdx));
+    }, { passive: true });
+
+    // Tooltip
+    const tip = document.getElementById("tip");
+    function showTip(e, html) {
+      tip.innerHTML = html;
+      tip.hidden = false;
+      moveTip(e);
+    }
+    function moveTip(e) {
+      if (tip.hidden) return;
+      const r = tip.getBoundingClientRect();
+      let x = e.clientX + 14, y = e.clientY + 14;
+      if (x + r.width > window.innerWidth - 8) x = e.clientX - r.width - 14;
+      if (y + r.height > window.innerHeight - 8) y = e.clientY - r.height - 14;
+      tip.style.left = `${Math.max(8, x)}px`;
+      tip.style.top = `${Math.max(8, y)}px`;
+    }
+    const hideTip = () => { tip.hidden = true; };
+
+    // =========================================================================
+    // VIZ 1: 2023-2031 Structural Timeline SVG
+    // =========================================================================
+    function renderTimeline() {
+      const nodes = [
+        { yr: "2023–25", top: "비수도권 +401 순증", bot: "Big 5 동결 · 3,594 피크", col: "var(--teal)", r: 7 },
+        { yr: "2025.09", top: "복귀·신규 중첩", bot: "재원 전공의 포화 시작", col: "var(--amber)", r: 7 },
+        { yr: "2026", top: "-810명 급감 쇼크", bot: "2,784명 (기본 -778)", col: "var(--rose)", r: 8 },
+        { yr: "2027", top: "비대칭 회복 50:50", bot: "구조전환 12월 종료", col: "var(--teal)", r: 8 },
+        { yr: "2028.08", top: "3년제 복귀기 수료", bot: "내·외·소·가정 슬롯 해제", col: "var(--emerald)", r: 7 },
+        { yr: "2029.08", top: "4년제 복귀기 수료", bot: "전 과목 중첩 족쇄 해제", col: "var(--emerald)", r: 8 },
+        { yr: "2030.03", top: "★ 2030 이중 변곡점", bot: "중첩 해제 + 더블링 전야", col: "var(--indigo)", r: 11, hero: true },
+        { yr: "2031.03", top: "24·25학번 더블링", bot: "인턴 수요 ~5,450명 충돌", col: "var(--rose)", r: 9 },
+      ];
+      const W = 920, H = 165, yMid = 84;
+      const xOf = (i) => 56 + (i / (nodes.length - 1)) * (W - 112);
+
+      const segs = `
+        <line x1="${xOf(0)}" y1="${yMid}" x2="${xOf(5)}" y2="${yMid}" stroke="var(--border-strong)" stroke-width="3" stroke-linecap="round"/>
+        <line x1="${xOf(5)}" y1="${yMid}" x2="${xOf(7)}" y2="${yMid}" stroke="var(--indigo)" stroke-width="3" stroke-dasharray="6 4"/>
+        <rect x="${(xOf(6) - 62).toFixed(1)}" y="14" width="124" height="136" rx="12" fill="var(--indigo-soft)" stroke="var(--indigo)" stroke-opacity="0.35"/>
+      `;
+      const pts = nodes.map((n, i) => {
+        const x = xOf(i).toFixed(1);
+        return `
+          <g>
+            <circle cx="${x}" cy="${yMid}" r="${n.r}" fill="${n.col}" stroke="var(--surface)" stroke-width="2.5"/>
+            <text x="${x}" y="${yMid - 22}" text-anchor="middle" fill="${n.hero ? "var(--indigo)" : "var(--ink)"}" font-size="${n.hero ? 12 : 11}" font-weight="${n.hero ? 850 : 750}">${n.yr}</text>
+            <text x="${x}" y="${yMid - 38}" text-anchor="middle" fill="${n.hero ? "var(--indigo)" : "var(--ink-2)"}" font-size="10.5" font-weight="${n.hero ? 800 : 650}">${n.top}</text>
+            <text x="${x}" y="${yMid + 28}" text-anchor="middle" fill="var(--ink-3)" font-size="10">${n.bot}</text>
+          </g>
+        `;
+      }).join("");
+
+      document.getElementById("vizTimeline").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="2023에서 2031 수련 수급 타임라인">${segs}${pts}</svg>`;
+    }
+
+    // =========================================================================
+    // VIZ 2: 2023-2027 Macro Stacked Bar + Res/Intern Ratio Line
+    // =========================================================================
+    function renderMacro() {
+      const years = [
+        { yr: "2023", tot: 3464, base: 3150, ex: 314, met: 2144, non: 1320, itn: 3255 },
+        { yr: "2024", tot: 3464, base: 3160, ex: 304, met: 1932, non: 1532, itn: 3258 },
+        { yr: "2025", tot: 3594, base: 3278, ex: 316, met: 1873, non: 1721, itn: 3356 },
+        { yr: "2026", tot: 2784, base: 2500, ex: 284, met: 1418, non: 1366, itn: 3275 },
+        { yr: "2027", tot: 3289, base: 2996, ex: 293, met: 1631, non: 1658, itn: 3374 },
+      ];
+      const W = 880, H = 290, pad = { t: 30, r: 62, b: 38, l: 54 };
+      const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+      const maxTO = 4000;
+      const xOf = (i) => pad.l + (i + 0.5) * (cw / years.length);
+      const yTO = (v) => pad.t + ch - (v / maxTO) * ch;
+      const yRatio = (pct) => pad.t + ch - ((pct - 75) / 40) * ch; // 75%..115%
+
+      let grid = "";
+      for (const v of [0, 1000, 2000, 3000, 4000]) {
+        const y = yTO(v);
+        grid += `<line x1="${pad.l}" y1="${y}" x2="${W - pad.r}" y2="${y}" stroke="var(--border)" stroke-dasharray="${v ? "3 3" : ""}"/>`;
+        grid += `<text x="${pad.l - 8}" y="${y + 4}" text-anchor="end" fill="var(--ink-3)" font-size="11">${v.toLocaleString()}</text>`;
+      }
+      // 100% reference on right axis
+      const y100 = yRatio(100);
+      grid += `<line x1="${pad.l}" y1="${y100}" x2="${W - pad.r}" y2="${y100}" stroke="var(--amber)" stroke-opacity="0.45" stroke-dasharray="4 4"/>`;
+      grid += `<text x="${W - pad.r + 6}" y="${y100 + 4}" fill="var(--amber)" font-size="10.5" font-weight="700">100%</text>`;
+
+      const barW = 68;
+      let bars = "";
+      const linePts = [];
+      years.forEach((d, i) => {
+        const cx = xOf(i);
+        const hMet = (d.met / maxTO) * ch;
+        const hNon = (d.non / maxTO) * ch;
+        const yNonTop = pad.t + ch - hNon;
+        const yMetTop = yNonTop - hMet;
+        const metPct = (d.met / d.tot * 100).toFixed(1);
+        const ratio = d.tot / d.itn * 100;
+        linePts.push([cx, yRatio(ratio), ratio, d]);
+
+        bars += `
+          <g class="macro-bar" style="cursor:pointer" data-idx="${i}">
+            <rect x="${(cx - barW / 2).toFixed(1)}" y="${yNonTop.toFixed(1)}" width="${barW}" height="${hNon.toFixed(1)}" rx="3" fill="var(--indigo)" fill-opacity="0.86"/>
+            <rect x="${(cx - barW / 2).toFixed(1)}" y="${yMetTop.toFixed(1)}" width="${barW}" height="${hMet.toFixed(1)}" rx="3" fill="var(--teal)" fill-opacity="0.88"/>
+            <text x="${cx.toFixed(1)}" y="${(yMetTop - 8).toFixed(1)}" text-anchor="middle" fill="var(--ink)" font-size="12" font-weight="800">${d.tot.toLocaleString()}</text>
+            <text x="${cx.toFixed(1)}" y="${(yMetTop + hMet / 2 + 4).toFixed(1)}" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700">${metPct}%</text>
+            <text x="${cx.toFixed(1)}" y="${(yNonTop + hNon / 2 + 4).toFixed(1)}" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700">${(100 - Number(metPct)).toFixed(1)}%</text>
+            <text x="${cx.toFixed(1)}" y="${H - 12}" text-anchor="middle" fill="var(--ink-2)" font-size="12" font-weight="750">${d.yr}년</text>
+          </g>
+        `;
+      });
+
+      const dLine = linePts.map((p, i) => `${i === 0 ? "M" : "L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
+      const ratioLine = `<path d="${dLine}" fill="none" stroke="var(--amber)" stroke-width="2.6" stroke-linejoin="round"/>` +
+        linePts.map(([x, y, r]) => `
+          <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.8" fill="var(--amber)" stroke="var(--surface)" stroke-width="2"/>
+          <text x="${(x + 26).toFixed(1)}" y="${(y - 6).toFixed(1)}" text-anchor="middle" fill="var(--amber)" font-size="10.5" font-weight="800">${r.toFixed(1)}%</text>
+        `).join("");
+
+      const box = document.getElementById("vizMacro");
+      box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="2023에서 2027 전국 레지던트 TO 추이">${grid}${bars}${ratioLine}</svg>`;
+      box.querySelectorAll(".macro-bar").forEach((g) => {
+        const d = years[Number(g.dataset.idx)];
+        g.addEventListener("mouseenter", (e) => showTip(e, `<strong>${d.yr}년도 공식 정원</strong>총 ${d.tot.toLocaleString()}명 (기본 ${d.base.toLocaleString()} + 별도 ${d.ex})<br>수도권 ${d.met.toLocaleString()} (${(d.met/d.tot*100).toFixed(1)}%) · 비수도권 ${d.non.toLocaleString()}<br>인턴 ${d.itn.toLocaleString()}명 (레/인 ${(d.tot/d.itn*100).toFixed(1)}%)`));
+        g.addEventListener("mousemove", moveTip);
+        g.addEventListener("mouseleave", hideTip);
+      });
+    }
+
+    // =========================================================================
+    // VIZ 3: Base(A) Winners vs Extra(B) Vulnerable Toggle Chart
+    // =========================================================================
+    const BASE_WINNERS = [
+      { h: "칠곡경북대병원", reg: "대구", b23: 23, b27: 42, ex27: 6 },
+      { h: "충북대병원", reg: "충북", b23: 32, b27: 49, ex27: 4 },
+      { h: "경북대병원", reg: "대구", b23: 42, b27: 58, ex27: 8 },
+      { h: "세종충남대병원", reg: "세종", b23: 0, b27: 16, ex27: 1 },
+      { h: "원주세브란스기독", reg: "강원", b23: 35, b27: 51, ex27: 1 },
+      { h: "양산부산대병원", reg: "경남", b23: 40, b27: 55, ex27: 8 },
+      { h: "충남대병원", reg: "대전", b23: 50, b27: 64, ex27: 7 },
+      { h: "전북대병원", reg: "전북", b23: 42, b27: 55, ex27: 6 },
+      { h: "부산대병원", reg: "부산", b23: 54, b27: 66, ex27: 7 },
+      { h: "전남대병원", reg: "광주", b23: 50, b27: 62, ex27: 11 },
+      { h: "건양대병원", reg: "대전", b23: 27, b27: 38, ex27: 0 },
+      { h: "해운대백병원", reg: "부산", b23: 27, b27: 38, ex27: 3 },
+    ];
+    const BASE_VULN = [
+      { h: "국립중앙의료원", reg: "서울", b23: 12, b27: 9, ex27: 7 },
+      { h: "중앙보훈병원", reg: "서울", b23: 20, b27: 12, ex27: 7 },
+      { h: "서울특별시서울의료원", reg: "서울", b23: 18, b27: 13, ex27: 6 },
+      { h: "국립암센터", reg: "경기", b23: 17, b27: 11, ex27: 4 },
+      { h: "의정부성모병원", reg: "경기", b23: 25, b27: 12, ex27: 4 },
+      { h: "분당제생병원", reg: "경기", b23: 16, b27: 9, ex27: 3 },
+      { h: "부천성모병원", reg: "경기", b23: 21, b27: 15, ex27: 3 },
+      { h: "한림대동탄성심", reg: "경기", b23: 22, b27: 17, ex27: 3 },
+      { h: "국민건강보험일산", reg: "경기", b23: 33, b27: 18, ex27: 3 },
+      { h: "서울특별시보라매", reg: "서울", b23: 31, b27: 25, ex27: 4 },
+    ];
+
+    function renderBaseExtra(mode) {
+      const items = mode === "winners" ? BASE_WINNERS : BASE_VULN;
+      const box = document.getElementById("vizBaseExtra");
+      const maxV = Math.max(...items.map((d) => Math.max(d.b23, d.b27 + d.ex27))) + 5;
+      const W = 880, rowH = 29, H = items.length * rowH + 26;
+      const lblW = 152, valW = 156, barMax = W - lblW - valW - 14;
+
+      const svg = items.map((d, i) => {
+        const y = 12 + i * rowH;
+        const wBase = (d.b27 / maxV) * barMax;
+        const wEx = (d.ex27 / maxV) * barMax;
+        const x23 = lblW + (d.b23 / maxV) * barMax;
+        const diffB = d.b27 - d.b23;
+        const exPct = ((d.ex27 / (d.b27 + d.ex27)) * 100).toFixed(0);
+        const colB = mode === "winners" ? "var(--teal)" : "var(--rose)";
+        return `
+          <g class="be-row" style="cursor:pointer" data-i="${i}">
+            <rect x="0" y="${y}" width="${W}" height="${rowH - 2}" rx="5" fill="transparent"/>
+            <text x="${lblW - 10}" y="${y + 18}" text-anchor="end" fill="var(--ink)" font-size="12" font-weight="700">${d.h} <tspan fill="var(--ink-3)" font-weight="500" font-size="11">(${d.reg})</tspan></text>
+            <rect x="${lblW}" y="${y + 6}" width="${Math.max(2, wBase).toFixed(1)}" height="${rowH - 13}" rx="3.5" fill="${colB}" fill-opacity="0.86"/>
+            ${d.ex27 > 0 ? `<rect x="${(lblW + wBase).toFixed(1)}" y="${y + 6}" width="${Math.max(3, wEx).toFixed(1)}" height="${rowH - 13}" rx="3.5" fill="var(--amber)"/>` : ""}
+            <line x1="${x23.toFixed(1)}" y1="${y + 3}" x2="${x23.toFixed(1)}" y2="${y + rowH - 5}" stroke="var(--ink)" stroke-width="2"/>
+            <text x="${W - 6}" y="${y + 18}" text-anchor="end" fill="var(--ink-2)" font-size="11.5" font-weight="700">기본 ${d.b23}→${d.b27} (${diffB >= 0 ? "+" : ""}${diffB}) · 별도 +${d.ex27} (${exPct}%)</text>
+          </g>
+        `;
+      }).join("");
+
+      box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="기본정원 대 별도정원 비교">${svg}</svg>
+        <div style="font-size:11.5px;color:var(--ink-3);margin-top:4px">세로 검은 선 = 2023년 기본정원(A) 위치 · 막대 앞부분 = 2027 기본정원(A) · 주황 막대 = 2027 별도정원(B)</div>`;
+      box.querySelectorAll(".be-row").forEach((g) => {
+        const d = items[Number(g.dataset.i)];
+        g.addEventListener("mouseenter", (e) => showTip(e, `<strong>${d.h} (${d.reg})</strong>2023 기본정원: ${d.b23}명<br>2027 기본정원: ${d.b27}명 (${d.b27-d.b23>=0?"+":""}${d.b27-d.b23})<br>2027 별도정원: +${d.ex27}명 → 최종 ${d.b27+d.ex27}명`));
+        g.addEventListener("mousemove", moveTip);
+        g.addEventListener("mouseleave", hideTip);
+      });
+    }
+
+    document.querySelectorAll("[data-base-mode]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("[data-base-mode]").forEach((b) => b.classList.toggle("is-active", b === btn));
+        renderBaseExtra(btn.dataset.baseMode);
+      });
+    });
+
+    // =========================================================================
+    // VIZ 4: Funnel Shift Dumbbell Chart (2023 -> 2027 Res/Intern %)
+    // =========================================================================
+    function renderFunnel() {
+      const items = [
+        { h: "부산대병원 (부산)", p23: 105.5, p27: 146.0, info27: "73 / 50" },
+        { h: "칠곡경북대병원 (대구)", p23: 103.6, p27: 137.1, info27: "48 / 35" },
+        { h: "해운대백병원 (부산)", p23: 115.4, p27: 136.7, info27: "41 / 30" },
+        { h: "경북대병원 (대구)", p23: 98.0, p27: 124.5, info27: "66 / 53" },
+        { h: "충남대병원 (대전)", p23: 121.3, p27: 129.1, info27: "71 / 55" },
+        { h: "분당서울대병원 (경기)", p23: 188.9, p27: 138.9, info27: "50 / 36" },
+        { h: "고려대안암병원 (서울)", p23: 153.8, p27: 115.4, info27: "45 / 39" },
+        { h: "아주대병원 (경기)", p23: 136.2, p27: 104.7, info27: "45 / 43" },
+        { h: "이대목동병원 (서울)", p23: 123.5, p27: 90.0, info27: "27 / 30" },
+        { h: "한림대성심병원 (경기)", p23: 114.3, p27: 87.1, info27: "27 / 31" },
+        { h: "경희대병원 (서울)", p23: 122.0, p27: 86.5, info27: "32 / 37" },
+        { h: "성빈센트병원 (경기)", p23: 109.1, p27: 75.0, info27: "24 / 32" },
+        { h: "가천대길병원 (인천)", p23: 109.3, p27: 70.0, info27: "35 / 50" },
+        { h: "의정부성모병원 (경기)", p23: 93.5, p27: 66.7, info27: "16 / 24" },
+      ];
+      const W = 880, rowH = 26, H = items.length * rowH + 34;
+      const lblW = 166, rightW = 104, minP = 50, maxP = 195;
+      const xOf = (p) => lblW + ((p - minP) / (maxP - minP)) * (W - lblW - rightW - 14);
+      const x100 = xOf(100);
+
+      let grid = `<line x1="${x100.toFixed(1)}" y1="10" x2="${x100.toFixed(1)}" y2="${H - 22}" stroke="var(--amber)" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+      grid += `<text x="${x100.toFixed(1)}" y="${H - 6}" text-anchor="middle" fill="var(--amber)" font-size="11" font-weight="800">100% (인턴=레지던트)</text>`;
+      for (const p of [60, 80, 120, 140, 160, 180]) {
+        const x = xOf(p);
+        grid += `<line x1="${x.toFixed(1)}" y1="12" x2="${x.toFixed(1)}" y2="${H - 24}" stroke="var(--border)" stroke-dasharray="2 3"/>`;
+        grid += `<text x="${x.toFixed(1)}" y="${H - 6}" text-anchor="middle" fill="var(--ink-3)" font-size="10.5">${p}%</text>`;
+      }
+
+      const rows = items.map((d, i) => {
+        const y = 16 + i * rowH;
+        const x1 = xOf(d.p23), x2 = xOf(d.p27);
+        const up = d.p27 >= d.p23;
+        const col = up ? "var(--emerald)" : "var(--rose)";
+        const diff = d.p27 - d.p23;
+        return `
+          <g class="fn-row" style="cursor:pointer" data-i="${i}">
+            <text x="${lblW - 10}" y="${y + 4}" text-anchor="end" fill="var(--ink)" font-size="11.5" font-weight="650">${d.h}</text>
+            <line x1="${x1.toFixed(1)}" y1="${y}" x2="${x2.toFixed(1)}" y2="${y}" stroke="${col}" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="${x1.toFixed(1)}" cy="${y}" r="4.2" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="2"/>
+            <circle cx="${x2.toFixed(1)}" cy="${y}" r="5" fill="${col}" stroke="var(--surface)" stroke-width="1.5"/>
+            <text x="${W - 6}" y="${y + 4}" text-anchor="end" fill="${col}" font-size="11.5" font-weight="800">${d.p27.toFixed(0)}% (${diff >= 0 ? "+" : ""}${diff.toFixed(0)}%p)</text>
+          </g>
+        `;
+      }).join("");
+
+      const box = document.getElementById("vizFunnel");
+      box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="병원별 인턴 대비 레지던트 비율 변화 덤벨 차트">${grid}${rows}</svg>`;
+      box.querySelectorAll(".fn-row").forEach((g) => {
+        const d = items[Number(g.dataset.i)];
+        g.addEventListener("mouseenter", (e) => showTip(e, `<strong>${d.h}</strong>2023년: ${d.p23.toFixed(1)}% → 2027년: <strong>${d.p27.toFixed(1)}%</strong> (${d.p27-d.p23>=0?"+":""}${(d.p27-d.p23).toFixed(1)}%p)<br>2027 레지던트/인턴: ${d.info27}명`));
+        g.addEventListener("mousemove", moveTip);
+        g.addEventListener("mouseleave", hideTip);
+      });
+    }
+
+    // =========================================================================
+    // CHAPTER 3: Interactive 6 Hospital Group Deep Dive
+    // =========================================================================
+    const GROUPS = {
+      big5: {
+        badge: "하방 단단 · 전면 복귀는 구조전환이 관건",
+        badgeCls: "pill-teal",
+        why: "2025년까지는 본원 정원을 거의 지켰으나, 2026년 구조전환(병상 10~15% 감축 + 전문의·PA 체제)과 2027년 수도권 50% 캡이 겹치며 <strong>내과·외과·산부인과·응급·흉부외과 등 대형 필수의료과</strong>에서 14~20% 미복원 상태가 남았습니다. 5곳 모두 0명 과목은 0개로 수련 인프라는 건재합니다.",
+        outlook: "2030년에 추가 대폭 삭감될 가능성은 낮습니다. 다만 과거(100~113명)로의 단순 복귀보다는 <strong>① 4년제 중첩 해소에 따른 +4~8명 소폭 반등</strong>, <strong>② 다기관 협력수련 거점 별도정원</strong>, <strong>③ 비수도권 계열(강릉아산·울산대·삼성창원·대전성모)로의 그룹 내 분산</strong>이 핵심 경로입니다.",
+        rows: [
+          ["서울대병원", 113, 110, 105, 88, 97, "-14.2%", "별도 9명(국가중앙병원), 피부·재활 순증"],
+          ["서울아산병원", 110, 110, 110, 80, 88, "-20.0%", "내과 25→19·외과 7→5·응급 5→3 미복원"],
+          ["세브란스병원", 107, 104, 104, 77, 86, "-19.6%", "내과 18→15·외과 7→5·소청 10→8 미복원"],
+          ["삼성서울병원", 99, 96, 96, 74, 80, "-19.2%", "외과 7→5·내과 18→16·산부인과 6→4"],
+          ["서울성모병원", 75, 72, 73, 52, 64, "-14.7%", "26년 52명→27년 +12명 강한 반등"],
+        ]
+      },
+      metroMid: {
+        badge: "2030년 양극화 최대 진앙지 (-25% ~ -45%)",
+        badgeCls: "pill-rose",
+        why: "Big 5는 최소 정원을 방어하고 지방은 늘리는 사이, <strong>과목당 1~2명만 받던 수도권 중형 사립대가 수도권 50% 캡 + 지도전문의(N-1) 이탈의 직격탄</strong>을 맞아 소수과가 대거 0명 절벽에 떨어졌습니다.",
+        outlook: "<strong>두 갈래로 갈립니다.</strong> ① 아주대·분당서울대·고대안암/구로·강남세브란스·인하대·성빈센트 등 2027년 첫 0명(<code>1-1-1-1-0</code>) 과목은 2028~2030년 교수 충원 시 1명 부활 가능성이 큽니다. ② 가천대길(0명 7과)·의정부성모(0명 9과)·일산백(0명 6과)의 2년 연속 0명 과목은 영구 지정 반납 위험이 큽니다.",
+        rows: [
+          ["의정부성모병원", 29, 24, 24, 20, 16, "-44.8%", "기본 25→12 급감, 25→27 6과 0명화"],
+          ["가천대길병원", 59, 59, 55, 33, 35, "-40.7%", "안과(2→0)·병리·진검·방종·핵의학 0명"],
+          ["일산백병원", 33, 28, 27, 20, 20, "-39.4%", "26→27 반등 0명, 성형·안과·영상·재활 0"],
+          ["경희대병원", 50, 44, 43, 30, 32, "-36.0%", "총 6과 0명, 안과(1→2)는 방어"],
+          ["이대목동병원", 42, 36, 36, 27, 27, "-35.7%", "이대서울 이동 + 피부·성형·이비인후 0"],
+          ["성빈센트병원", 36, 31, 28, 20, 24, "-33.3%", "25→27 6과(성형·안과·피부·재활 등) 0명"],
+          ["아주대병원", 64, 59, 59, 40, 45, "-29.7%", "외과·정형·응급 각 -2명, 0명은 2과뿐"],
+          ["인하대병원", 46, 46, 44, 29, 34, "-26.1%", "영상(2→0)·병리·진검·가정 0명"],
+        ]
+      },
+      newBranch: {
+        badge: "수도권 유일의 확실한 우상향 성장군",
+        badgeCls: "pill-emerald",
+        why: "개원 초기 환자·연차 실적이 부족해 적은 TO로 시작했으나, 개원 4~7년 차에 들어서며 <strong>수련 실적 요건을 충족한 과목부터 신규 지정 → 0→1→2명으로 계단식 성장</strong>하는 구간입니다.",
+        outlook: "수도권 총량 제약 속에서도 <strong>중앙대광명(2027 피부·진검 신규 지정)</strong>과 <strong>이대서울(25→27 +70%)</strong>, <strong>의정부을지(경기 북부 취약지)</strong>, <strong>용인세브란스</strong>는 2030년까지 과목 수와 정원이 추가로 늘어날 가능성이 가장 높습니다.",
+        rows: [
+          ["이대서울병원", 9, 10, 10, 9, 17, "+88.9%", "기본 9→13 + 별도 4, 수도권 최강 반등"],
+          ["중앙대광명병원", 0, 0, 1, 3, 8, "신규확장", "매년 계단식 성장 + 27년 피부·진검 신규"],
+          ["의정부을지대병원", 2, 4, 6, 5, 7, "+250%", "경기 북부 취약지 수련 기반 확장 중"],
+          ["용인세브란스병원", 13, 12, 11, 12, 13, "0.0%", "수도권 급감 속 완벽 방어"],
+          ["은평성모병원", 23, 17, 15, 16, 19, "-17.4%", "25년 저점(15) 대비 +4명 회복세"],
+        ]
+      },
+      national: {
+        badge: "기본정원(A) 구조적 성장 · 2030년 질적 검증 시험대",
+        badgeCls: "pill-indigo",
+        why: "5:5 비수도권 배정의 1차 수용처이자 <strong>기본정원(A) 자체가 12~19명씩 커진 진짜 승자</strong>입니다. 2026년 급감 이후 2027년에 2025년 피크의 <strong>97~116%를 즉시 복원</strong>했습니다.",
+        outlook: "부산·경북·전남·충남 등 쌍두마차(본원+제2병원)와 <strong>군산전북대병원(2028 개원 목표)</strong>은 2030년에도 강세가 유력합니다. 다만 <strong>별도정원 비중이 높은 과목(전남대 11·화순 7·경북대 8·강원대 6)</strong>은 2027–2029년 교수 충원 지연·만성 미달 시 일부 조정될 리스크를 주시해야 합니다.",
+        rows: [
+          ["칠곡경북대병원", 29, 39, 43, 37, 48, "+65.5%", "기본 +19 순증, 25년 대비 111.6%"],
+          ["경북대병원", 48, 59, 66, 57, 66, "+37.5%", "기본 +16 순증, 25년 피크 100% 복원"],
+          ["전남대병원", 55, 69, 72, 58, 73, "+32.7%", "기본 +12 + 별도 11, 25년 초월"],
+          ["부산대병원", 58, 69, 75, 63, 73, "+25.9%", "레/인 비율 146%, 0명 과목 0개"],
+          ["양산부산대병원", 49, 58, 64, 54, 63, "+28.6%", "기본 +15 순증, 0명 과목 0개"],
+          ["충남대병원", 57, 65, 72, 62, 71, "+24.6%", "세종충남대(+17)와 합산 88명"],
+          ["충북대병원", 39, 48, 54, 45, 53, "+35.9%", "기본 +17 순증, 27년 방종 신규 1명"],
+          ["제주대병원", 23, 27, 31, 24, 36, "+56.5%", "25년 대비 116.1%, 0명 과목 0개"],
+        ]
+      },
+      nonMetroPriv: {
+        badge: "동반 수혜 종료 → 2030년 권역 내 옥석 가리기",
+        badgeCls: "pill-teal",
+        why: "2023–2027년 비수도권 대형 사립대병원 대부분이 2025년 피크의 94~102%를 복원하며 고르게 성장했습니다. 지역 2차 포괄병원(대자인·광주기독 등)에도 신규 지정이 시작됐습니다.",
+        outlook: "2028–2030년에는 대구(5개 의대)·부산(4개)·대전(4개) 등 <strong>같은 권역 내 수련 질·충원율 경쟁</strong>으로 넘어갑니다. 해운대백·계명동산·순천향천안·원주세브란스·울산대·강릉아산 등은 굳히기가 유력하지만, 소수과 이탈이 시작된 병원(건양대 3과 0명 등)과 소규모 지방 분원(구미·경주·충주)은 방어가 과제입니다.",
+        rows: [
+          ["강릉아산병원", 17, 22, 27, 24, 26, "+52.9%", "울산대 계열 비수도권 분산 수혜"],
+          ["대전을지대병원", 26, 31, 38, 30, 36, "+38.5%", "23→27 +10명, 25년 대비 94.7%"],
+          ["원주세브란스기독", 38, 50, 55, 46, 52, "+36.8%", "기본정원 +16 순증, 0명 과목 0개"],
+          ["해운대백병원", 30, 35, 42, 33, 41, "+36.7%", "레/인 비율 136.7%, 0명 과목 0개"],
+          ["순천향대천안", 38, 41, 50, 39, 49, "+28.9%", "25년 대비 98.0%, 신축 투자 효과"],
+          ["울산대병원", 36, 40, 45, 35, 45, "+25.0%", "25년 피크 100% 복원"],
+          ["계명대동산병원", 46, 49, 56, 45, 55, "+19.6%", "기본 +9 순증, 0명 과목 0개"],
+          ["제주한라병원", 4, 6, 10, 8, 15, "+275%", "지역 2차 거점 대표 성장 사례"],
+        ]
+      },
+      public: {
+        badge: "정책 별도정원 25~100% 의존 · 정책 변동성 최고",
+        badgeCls: "pill-amber",
+        why: "수도권 공공병원들도 2023–2026년 수도권 캡에 똑같이 깎였다가(기본정원 -3~-14명 잠식), 2027년 <strong>정책적 별도정원(b)을 대거 투입해 2025년 수준으로 끌어올린 상태</strong>입니다.",
+        outlook: "2030년 <strong>다기관 협력수련 본사업</strong>에 정규 편입되면 안정적 공공 허브로 자리 잡지만, <code>기본 0 + 별도 1</code> 과목이 워낙 많아(서울의료원 5과, 중앙보훈 6과) 예산·정책 기조가 흔들리면 가장 급격히 깎일 구조적 취약성이 큽니다.",
+        rows: [
+          ["국민건강보험일산", 35, 29, 28, 20, 21, "-40.0%", "기본 33→18 급감, 7개 과목 0명"],
+          ["국립중앙의료원", 22, 17, 17, 9, 16, "-27.3%", "별도정원 7명(43.8%) 의존"],
+          ["서울특별시서울의료원", 26, 21, 21, 15, 19, "-26.9%", "별도정원 6명(31.6%), 기본0+별도1 5과"],
+          ["중앙보훈병원", 26, 23, 21, 15, 19, "-26.9%", "별도정원 7명(36.8%), 기본0+별도1 6과"],
+          ["국립암센터", 20, 15, 15, 12, 15, "-25.0%", "별도정원 4명(26.7%) 의존"],
+          ["서울특별시보라매", 34, 32, 30, 25, 29, "-14.7%", "공공병원 중 가장 탄탄한 기본정원(25)"],
+        ]
+      }
+    };
+
+    function spark(vals) {
+      const W = 72, H = 20, min = Math.min(...vals), max = Math.max(...vals), sp = Math.max(1, max - min);
+      const pts = vals.map((v, i) => [4 + (i / 4) * (W - 8), 3 + (H - 6) - ((v - min) / sp) * (H - 6)]);
+      const col = vals[4] > vals[0] ? "var(--emerald)" : vals[4] < vals[0] ? "var(--rose)" : "var(--teal)";
+      const d = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
+      return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="vertical-align:middle"><path d="${d}" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round"/><circle cx="${pts[4][0].toFixed(1)}" cy="${pts[4][1].toFixed(1)}" r="2.6" fill="${col}"/></svg>`;
+    }
+
+    function renderGroup(key) {
+      const g = GROUPS[key];
+      document.getElementById("groupDetailBox").innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div><span class="pill-tag ${g.badgeCls}">${g.badge}</span></div>
+          <div class="insight-grid">
+            <div style="padding:11px 13px;border-radius:10px;background:var(--subtle);font-size:13px;color:var(--ink-2)">
+              <strong style="display:block;color:var(--ink);margin-bottom:3px">왜 이렇게 변했는가 (2023–2027)</strong>${g.why}
+            </div>
+            <div style="padding:11px 13px;border-radius:10px;background:var(--subtle);font-size:13px;color:var(--ink-2)">
+              <strong style="display:block;color:var(--ink);margin-bottom:3px">2030년 조건부 추론</strong>${g.outlook}
+            </div>
+          </div>
+          <div class="clean-table-wrap">
+            <table class="clean-table">
+              <thead><tr><th>병원명</th><th class="num">23</th><th class="num">24</th><th class="num">25</th><th class="num">26</th><th class="num">27</th><th class="num">23→27</th><th>추이</th><th>핵심 특징</th></tr></thead>
+              <tbody>
+                ${g.rows.map((r) => {
+                  const isPos = String(r[6]).startsWith("+") || r[6] === "신규확장";
+                  const isNeg = String(r[6]).startsWith("-");
+                  const col = isPos ? "var(--emerald)" : isNeg ? "var(--rose)" : "var(--ink-2)";
+                  return `<tr><td><strong>${r[0]}</strong></td><td class="num">${r[1]}</td><td class="num">${r[2]}</td><td class="num">${r[3]}</td><td class="num">${r[4]}</td><td class="num"><strong>${r[5]}</strong></td><td class="num" style="color:${col};font-weight:750">${r[6]}</td><td>${spark([r[1],r[2],r[3],r[4],r[5]])}</td><td style="font-size:12px;color:var(--ink-2)">${r[7]}</td></tr>`;
+                }).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    document.querySelectorAll("#groupTabs [data-group]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("#groupTabs [data-group]").forEach((b) => b.classList.toggle("is-active", b === btn));
+        renderGroup(btn.dataset.group);
+      });
+    });
+
+    // =========================================================================
+    // VIZ 5: 24 Specialties Quadrant Bubble Chart
+    // =========================================================================
+    function renderDeptQuad() {
+      const depts = [
+        { d: "내과", v23: 635, v25: 700, v27: 672, yr: 3, ex: 66 },
+        { d: "가정의학과", v23: 338, v25: 291, v27: 261, yr: 3, ex: 4 },
+        { d: "정형외과", v23: 218, v25: 217, v27: 206, yr: 4, ex: 15 },
+        { d: "마취통증", v23: 205, v25: 214, v27: 201, yr: 4, ex: 6 },
+        { d: "외과", v23: 214, v25: 215, v27: 194, yr: 3, ex: 39 },
+        { d: "소아청소년", v23: 207, v25: 206, v27: 192, yr: 3, ex: 16 },
+        { d: "응급의학과", v23: 190, v25: 224, v27: 189, yr: 4, ex: 32 },
+        { d: "산부인과", v23: 186, v25: 188, v27: 163, yr: 4, ex: 26 },
+        { d: "영상의학과", v23: 139, v25: 156, v27: 147, yr: 4, ex: 8 },
+        { d: "정신건강", v23: 137, v25: 152, v27: 139, yr: 4, ex: 14 },
+        { d: "신경외과", v23: 106, v25: 119, v27: 104, yr: 4, ex: 15 },
+        { d: "안과", v23: 104, v25: 108, v27: 104, yr: 4, ex: 6 },
+        { d: "이비인후과", v23: 108, v25: 105, v27: 102, yr: 4, ex: 7 },
+        { d: "재활의학과", v23: 105, v25: 105, v27: 98, yr: 4, ex: 3 },
+        { d: "신경과", v23: 99, v25: 117, v27: 93, yr: 4, ex: 10 },
+        { d: "피부과", v23: 70, v25: 72, v27: 68, yr: 4, ex: 2 },
+        { d: "성형외과", v23: 73, v25: 73, v27: 66, yr: 4, ex: 0 },
+        { d: "비뇨의학과", v23: 53, v25: 62, v27: 60, yr: 4, ex: 5 },
+        { d: "병리과", v23: 81, v25: 74, v27: 59, yr: 3, ex: 2 },
+        { d: "흉부외과", v23: 70, v25: 65, v27: 58, yr: 4, ex: 13 },
+        { d: "진단검사", v23: 39, v25: 41, v27: 37, yr: 3, ex: 0 },
+        { d: "직업환경", v23: 35, v25: 36, v27: 32, yr: 3, ex: 0 },
+        { d: "방사선종양", v23: 23, v25: 26, v27: 22, yr: 3, ex: 0 },
+        { d: "핵의학과", v23: 29, v25: 28, v27: 22, yr: 3, ex: 4 },
+      ].map((x) => ({
+        ...x,
+        rec: (x.v27 / x.v25) * 100,
+        chg: ((x.v27 - x.v23) / x.v23) * 100,
+      }));
+
+      const W = 880, H = 370, pad = { t: 28, r: 30, b: 44, l: 58 };
+      const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+      const minX = 76, maxX = 100, minY = -32, maxY = 18;
+      const xOf = (v) => pad.l + ((v - minX) / (maxX - minX)) * cw;
+      const yOf = (v) => pad.t + ch - ((v - minY) / (maxY - minY)) * ch;
+
+      const xMid = xOf(91.5), y0 = yOf(0);
+      const quadBg = `
+        <rect x="${xMid}" y="${pad.t}" width="${W - pad.r - xMid}" height="${y0 - pad.t}" fill="var(--emerald-soft)" fill-opacity="0.4"/>
+        <rect x="${pad.l}" y="${y0}" width="${xMid - pad.l}" height="${pad.t + ch - y0}" fill="var(--rose-soft)" fill-opacity="0.3"/>
+        <line x1="${xMid}" y1="${pad.t}" x2="${xMid}" y2="${pad.t + ch}" stroke="var(--border-strong)" stroke-dasharray="4 4"/>
+        <line x1="${pad.l}" y1="${y0}" x2="${W - pad.r}" y2="${y0}" stroke="var(--border-strong)" stroke-dasharray="4 4"/>
+        <text x="${W - pad.r - 8}" y="${pad.t + 16}" text-anchor="end" fill="var(--emerald)" font-size="11" font-weight="800">▲ 구조적 성장 + 빠른 회복</text>
+        <text x="${pad.l + 8}" y="${pad.t + ch - 10}" fill="var(--rose)" font-size="11" font-weight="800">▼ 축소 또는 미복원 (4년제는 2030 반등 후보)</text>
+      `;
+
+      let axes = `
+        <line x1="${pad.l}" y1="${pad.t + ch}" x2="${W - pad.r}" y2="${pad.t + ch}" stroke="var(--border-strong)"/>
+        <line x1="${pad.l}" y1="${pad.t}" x2="${pad.l}" y2="${pad.t + ch}" stroke="var(--border-strong)"/>
+        <text x="${pad.l + cw / 2}" y="${H - 8}" text-anchor="middle" fill="var(--ink-2)" font-size="12" font-weight="700">2025 피크 대비 2027 회복률 (%)</text>
+        <text x="15" y="${pad.t + ch / 2}" text-anchor="middle" fill="var(--ink-2)" font-size="12" font-weight="700" transform="rotate(-90 15 ${pad.t + ch / 2})">2023→2027 총 TO 증감률 (%)</text>
+      `;
+      for (const x of [78, 82, 86, 90, 94, 98]) axes += `<text x="${xOf(x).toFixed(1)}" y="${H - 26}" text-anchor="middle" fill="var(--ink-3)" font-size="10.5">${x}%</text>`;
+      for (const y of [-30, -20, -10, 0, 10]) axes += `<text x="${pad.l - 8}" y="${(yOf(y) + 4).toFixed(1)}" text-anchor="end" fill="var(--ink-3)" font-size="10.5">${y > 0 ? "+" : ""}${y}%</text>`;
+
+      const dots = depts.map((d, i) => {
+        const cx = xOf(d.rec).toFixed(1), cy = yOf(d.chg).toFixed(1);
+        const r = Math.max(5.5, Math.min(20, Math.sqrt(d.v27) * 0.78));
+        const col = d.yr === 3 ? "var(--teal)" : "var(--indigo)";
+        const showLbl = d.v27 >= 58 || d.rec < 85 || d.chg > 5 || d.chg < -20;
+        return `
+          <g class="qd-dot" style="cursor:pointer" data-i="${i}">
+            <circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}" fill="${col}" fill-opacity="0.78" stroke="var(--surface)" stroke-width="1.6"/>
+            ${showLbl ? `<text x="${(Number(cx) + r + 4).toFixed(1)}" y="${(Number(cy) + 3.5).toFixed(1)}" fill="var(--ink)" font-size="10.5" font-weight="700" pointer-events="none">${d.d}</text>` : ""}
+          </g>
+        `;
+      }).join("");
+
+      const box = document.getElementById("vizDeptQuad");
+      box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="24개 과목 회복률 대 증감률 버블 차트">${quadBg}${axes}${dots}</svg>`;
+      box.querySelectorAll(".qd-dot").forEach((g) => {
+        const d = depts[Number(g.dataset.i)];
+        g.addEventListener("mouseenter", (e) => showTip(e, `<strong>${d.d} (${d.yr}년제)</strong>2023: ${d.v23} → 2025: ${d.v25} → 2027: <strong>${d.v27}명</strong> (별도 +${d.ex})<br>25년 대비 회복률: <strong>${d.rec.toFixed(1)}%</strong><br>23→27 증감률: <strong>${d.chg >= 0 ? "+" : ""}${d.chg.toFixed(1)}%</strong>`));
+        g.addEventListener("mousemove", moveTip);
+        g.addEventListener("mouseleave", hideTip);
+      });
+    }
+
+    // =========================================================================
+    // CHAPTER 5: Interactive 2030 Scenario Simulator
+    // =========================================================================
+    const SCENARIOS = {
+      mixed: {
+        title: "현실 혼합 경로 (28–29 선별 재편 → 30–31 한시 확대)",
+        sub: "기본정원(A) 5:5 틀은 유지하되, 부실과목 정리 후 2030–2031 더블링 압력을 별도정원(B)으로 흡수",
+        tot: "3,450 ~ 3,750명",
+        trigger: "4년제 중첩 해제(29.08) + 2031 더블링 선제 별도정원",
+        narrative: "2023–2027년 정책 패턴상 정부는 기본정원(A)의 5:5·구조전환 원칙은 유지하되, 현장 충격은 별도정원(B)으로 완충해 왔습니다. 2028~2029년 부실·만성 미달 과목 정리 후, 2030년에는 다기관 협력수련과 한시 별도정원을 통해 검증된 대형 거점(수도권 상급종병 + 비수도권 거점국립대 + 신축분원)의 수용력을 끌어올리는 전개 가능성이 가장 높습니다.",
+        groups: [
+          ["Big 5 본원", +10, "+5 ~ +12% (다기관·4년제 반등)"],
+          ["수도권 중형 사립", +2, "양극화 (1-1-1-1-0 부활 vs 0명 반납)"],
+          ["수도권 신축 분원", +22, "+15 ~ +30% (과목 신규 확장)"],
+          ["비수도권 거점국립", +10, "+5 ~ +12% (대형 거점 굳히기)"],
+          ["비수도권 사립·2차", +4, "상위 사립 유지 · 영세 분원 조정"],
+          ["공공·특수병원", +8, "다기관 본사업 편입 시 소폭 확대"],
+        ]
+      },
+      A: {
+        title: "시나리오 A: 구조전환·5:5 고착 (보수적)",
+        sub: "수도권 50% 캡 + 전문의·PA 체제 정착 + 24·25 더블링 대응을 2031년으로 지연",
+        tot: "3,250 ~ 3,350명",
+        trigger: "2027년 정원 틀 3년 연속 동결",
+        narrative: "2027년 정원 구조가 그대로 굳어지는 시나리오입니다. 인턴 TO 대비 레지던트 TO 100% 미만 역전이 지속되면서 수도권 중형 사립대의 자교 깔때기(70~87%) 압박이 극대화되고, 2년 이상 0명이었던 소수과들이 수련 지정을 반납하게 됩니다.",
+        groups: [
+          ["Big 5 본원", -2, "80~97명선 고착"],
+          ["수도권 중형 사립", -12, "0명 과목 반납·추가 슬림화"],
+          ["수도권 신축 분원", +12, "실적 축적분 소폭 증가"],
+          ["비수도권 거점국립", +4, "2027 확대분 안정 유지"],
+          ["비수도권 사립·2차", 0, "현 수준 보합"],
+          ["공공·특수병원", 0, "별도정원 유지 시 보합"],
+        ]
+      },
+      B: {
+        title: "시나리오 B: 더블링·주 72시간 선제 확대",
+        sub: "전공의 근무시간 단축(주 72h) + 2031년 인턴 5,450명 대란 대비 한시적 정원 대폭 확대",
+        tot: "3,600 ~ 3,950명",
+        trigger: "2030년 한시적 별도정원 대규모 투입",
+        narrative: "2031년 수련 대란을 막기 위해 2030년부터 선제적으로 한시 정원을 푸는 시나리오입니다. 2025년 피크(3,594명)를 돌파하며 Big 5 본원이 +10~18% 복원되고, 수도권 중형병원에서 0명이 되었던 인기·필수과들이 1명씩 대거 부활합니다.",
+        groups: [
+          ["Big 5 본원", +16, "+10 ~ +18% (25년 피크 근접)"],
+          ["수도권 중형 사립", +14, "0명 절벽 과목 대거 1명 부활"],
+          ["수도권 신축 분원", +28, "+20 ~ +35% 급성장"],
+          ["비수도권 거점국립", +18, "+12 ~ +20% 추가 증원"],
+          ["비수도권 사립·2차", +12, "지역 포괄 2차병원 확대"],
+          ["공공·특수병원", +15, "다기관 수련 허브 대폭 확장"],
+        ]
+      },
+      C: {
+        title: "시나리오 C: 수련 질·충원율 기반 선별 재편",
+        sub: "광역 5:5 일률 배분 폐기 → 진료권별 수요 + 지도전문의(N-1)·충원율 엄격 검증",
+        tot: "3,200 ~ 3,500명",
+        trigger: "수평위 부실수련병원 지정취소 및 진료권 추계 도입",
+        narrative: "기계적 5:5 배정의 부작용(부실 수련·만성 미달)이 공론화되어 수련의 질과 충원율 중심으로 재분배되는 시나리오입니다. 수도권·비수도권을 막론하고 교수진과 환자군이 검증된 초대형 병원은 회복되지만, 만성 미달 지방 중소병원과 수도권 영세 과목은 동시 축소됩니다.",
+        groups: [
+          ["Big 5 본원", +8, "교육 역량 우위로 소폭 회복"],
+          ["수도권 중형 사립", -6, "검증 상위 회복 vs 영세 과목 퇴출"],
+          ["수도권 신축 분원", +15, "최신 인프라 기반 선별 확대"],
+          ["비수도권 거점국립", -4, "대형 유지 · 만성 미달 별도 회수"],
+          ["비수도권 사립·2차", -8, "권역 내 상위만 생존·하위 축소"],
+          ["공공·특수병원", -10, "충원 미달 과목 별도정원 회수"],
+        ]
+      }
+    };
+
+    function renderScenario(key) {
+      const s = SCENARIOS[key];
+      document.getElementById("scTitle").textContent = s.title;
+      document.getElementById("scSub").textContent = s.sub;
+      document.getElementById("scMetaStrip").innerHTML = `
+        <span><strong>예상 전국 레지던트 TO:</strong> <span style="color:var(--teal-strong);font-weight:800">${s.tot}</span> <small style="color:var(--ink-3)">(2027년 3,289명 대비)</small></span>
+        <span><strong>핵심 방아쇠:</strong> ${s.trigger}</span>
+      `;
+      document.getElementById("scNarrative").textContent = s.narrative;
+
+      const maxAbs = 30;
+      document.getElementById("scenarioBars").innerHTML = s.groups.map(([name, val, note]) => {
+        const pct = Math.min(48, (Math.abs(val) / maxAbs) * 48);
+        const left = val >= 0 ? 50 : 50 - pct;
+        const col = val > 2 ? "var(--emerald)" : val < -2 ? "var(--rose)" : "var(--amber)";
+        return `
+          <div class="sc-row">
+            <div class="sc-label">${name}</div>
+            <div class="sc-track">
+              <div class="sc-center"></div>
+              <div class="sc-fill" style="left:${left.toFixed(1)}%;width:${Math.max(2, pct).toFixed(1)}%;background:${col}"></div>
+            </div>
+            <div class="sc-note" style="color:${col}">${note}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    document.querySelectorAll("#scenarioTabs [data-sc]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("#scenarioTabs [data-sc]").forEach((b) => b.classList.toggle("is-active", b === btn));
+        renderScenario(btn.dataset.sc);
+      });
+    });
+
+    // Init all visualizations
+    renderTimeline();
+    renderMacro();
+    renderBaseExtra("winners");
+    renderFunnel();
+    renderGroup("big5");
+    renderDeptQuad();
+    renderScenario("mixed");
+  })();
+  </script>
+</body>
+</html>
