@@ -498,7 +498,7 @@
     });
 
     const is2027Included = state.term === "2027-1" || state.term === "ALL";
-    document.getElementById("extraOnlyWrap").hidden = !is2027Included;
+    document.getElementById("extraOnlyWrap").hidden = false;
     document.getElementById("newOnlyWrap").hidden = !is2027Included;
 
     // Active filter tags (individually removable!)
@@ -580,11 +580,11 @@
       deltaHtml = `<span class="delta-pill ${cls}">${esc(TERM_BY_ID[prevTermId].label)} 대비 ${sign}${fmt(diff)} (${sign}${pct}%)</span>`;
     }
 
-    // 2027 breakdown info
+    // Breakdown info (all 2023-2027 official PDFs have base/extra/cut)
     const extraSum = rows.reduce((s, r) => s + (r.extra || 0), 0);
     const cutSum = rows.reduce((s, r) => s + (r.cut || 0), 0);
     let breakdownMeta = "";
-    if (state.term === "2027-1" && (extraSum > 0 || cutSum < 0)) {
+    if (extraSum > 0 || cutSum < 0) {
       const baseOnly = totalTO - extraSum - cutSum;
       breakdownMeta = `<span class="delta-pill delta-pill--amber">기본 ${fmt(baseOnly)} · 별도 +${fmt(extraSum)}${cutSum < 0 ? ` · 감원 ${cutSum}` : ""}</span>`;
     }
@@ -893,9 +893,7 @@
     }
 
     titleEl.textContent = "과목별 TO";
-    subEl.textContent = state.term === "2027-1"
-      ? "막대 클릭 시 과목 필터 토글 · 청록=기본정원 / 주황=별도정원"
-      : "막대 클릭 시 과목 필터 토글";
+    subEl.textContent = "막대 클릭 시 과목 필터 · 청록=기본정원 / 주황=별도정원";
 
     const map = new Map();
     const extraMap = new Map();
@@ -921,7 +919,7 @@
 
     const rowsSvg = items.map(([dept, val], i) => {
       const y = 8 + i * rowH;
-      const ex = state.term === "2027-1" ? (extraMap.get(dept) || 0) : 0;
+      const ex = extraMap.get(dept) || 0;
       const baseV = Math.max(0, val - ex);
       const bwTotal = Math.max(2, (val / maxVal) * barMax);
       const bwBase = val > 0 ? (baseV / val) * bwTotal : 0;
@@ -1318,7 +1316,7 @@
     const prevResMap = new Map(
       allRecs.filter((r) => r.term === prevTermId && r.type === "resident").map((r) => [r.dept, r.to])
     );
-    const showBreak = targetTerm === "2027-1";
+    const showBreak = true;
 
     const internTO = curInt ? curInt.to : 0;
     const deptRowsHtml = curRes.length ? `
@@ -2530,7 +2528,7 @@
   }
 
   function renderTable(rows) {
-    const showBreakdown = state.term === "2027-1" || state.term === "ALL";
+    const showBreakdown = true;
     tableEl.querySelectorAll(".col-breakdown").forEach((el) => { el.hidden = !showBreakdown; });
 
     document.getElementById("tableCountSub").textContent =
