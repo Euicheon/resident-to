@@ -1279,35 +1279,56 @@
       <span class="badge">${esc(TERM_BY_ID[targetTerm]?.label || targetTerm)} 기준</span>
     `;
 
-    // Build dual-series trend (Resident + Intern)
+    // Build trend chart SVG (supports switching between Selected Specialties vs Full Hospital when state.depts.size > 0)
+    const hasSelDepts = state.depts.size > 0;
+    const selLabel = ratioDeptLabel();
     const resVals = TERMS.map((t) => allRecs.filter((r) => r.term === t.id && r.type === "resident").reduce((s, r) => s + r.to, 0));
     const intVals = TERMS.map((t) => allRecs.filter((r) => r.term === t.id && r.type === "intern").reduce((s, r) => s + r.to, 0));
-    const maxV = Math.max(5, ...resVals, ...intVals);
-    const W = 740, H = 195, pad = { top: 28, right: 44, bottom: 32, left: 42 };
-    const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
-    const xOf = (i) => pad.left + (TERMS.length === 1 ? cw / 2 : (i / (TERMS.length - 1)) * cw);
-    const yOf = (v) => pad.top + ch - (v / maxV) * ch;
+    const selVals = TERMS.map((t) => allRecs.filter((r) => r.term === t.id && r.type === "resident" && state.depts.has(r.dept)).reduce((s, r) => s + r.to, 0));
 
-    const makeLine = (vals, color) => {
-      const pts = vals.map((v, i) => [xOf(i), yOf(v)]);
-      const d = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
-      return `<path d="${d}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round"/>` +
-        pts.map(([x, y], i) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="${color}" stroke="var(--surface)" stroke-width="1.5"/>` +
-          (vals[i] > 0 ? `<text x="${x.toFixed(1)}" y="${(y - 8).toFixed(1)}" text-anchor="middle" fill="${color}" font-size="10.5" font-weight="700">${vals[i]}</text>` : "")
-        ).join("");
-    };
+    function buildModalTrendSvg(mode) {
+      const W = 740, H = 195, pad = { top: 28, right: 44, bottom: 32, left: 42 };
+      const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
+      const xOf = (i) => pad.left + (TERMS.length === 1 ? cw / 2 : (i / (TERMS.length - 1)) * cw);
 
-    const trendSvg = `
-      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">
-        <line x1="${pad.left}" y1="${pad.top + ch}" x2="${W - pad.right}" y2="${pad.top + ch}" stroke="var(--border)"/>
-        <line x1="${pad.left}" y1="${pad.top + ch / 2}" x2="${W - pad.right}" y2="${pad.top + ch / 2}" stroke="var(--border)" stroke-dasharray="3 3"/>
-        <text x="${pad.left - 6}" y="${pad.top + 4}" text-anchor="end" fill="var(--ink-3)" font-size="10.5">${fmt(maxV)}</text>
-        <text x="${pad.left - 6}" y="${pad.top + ch + 4}" text-anchor="end" fill="var(--ink-3)" font-size="10.5">0</text>
-        ${makeLine(resVals, "#0d9488")}
-        ${makeLine(intVals, "#4f46e5")}
-        ${TERMS.map((t, i) => `<text x="${xOf(i).toFixed(1)}" y="${H - 10}" text-anchor="middle" fill="var(--ink-2)" font-size="11">${esc(t.label)}</text>`).join("")}
-      </svg>
-    `;
+      const makeLine = (vals, color, showZero = false, subLabels = null) => {
+        const pts = vals.map((v, i) => [xOf(i), yOf(v)]);
+        const d = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
+        return `<path d="${d}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round"/>` +
+          pts.map(([x, y], i) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.2" fill="${color}" stroke="var(--surface)" stroke-width="1.5"/>` +
+            ((showZero || vals[i] > 0) ? `<text x="${x.toFixed(1)}" y="${(y - 9).toFixed(1)}" text-anchor="middle" fill="${color}" font-size="11" font-weight="750">${vals[i]}${subLabels && subLabels[i] ? ` (${subLabels[i]})` : ""}</text>` : "")
+          ).join("");
+      };
+
+      const maxV = mode === "selected"
+        ? Math.max(4, ...selVals)
+        : Math.max(5, ...resVals, ...intVals);
+      const yOf = (v) => pad.top + ch - (v / maxV) * ch;
+
+      let linesSvg = "";
+      if (mode === "selected") {
+        const pctSubs = TERMS.map((_, i) => intVals[i] > 0 ? `${((selVals[i] / intVals[i]) * 100).toFixed(1)}%` : "");
+        const pts = selVals.map((v, i) => [xOf(i), yOf(v)]);
+        const dArea = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ") +
+          ` L${pts[pts.length - 1][0].toFixed(1)},${(pad.top + ch).toFixed(1)} L${pts[0][0].toFixed(1)},${(pad.top + ch).toFixed(1)} Z`;
+        linesSvg = `<path d="${dArea}" fill="#d97706" fill-opacity="0.12"/>` + makeLine(selVals, "#d97706", true, pctSubs);
+      } else {
+        linesSvg = makeLine(resVals, "#0d9488") + makeLine(intVals, "#4f46e5") + (hasSelDepts ? makeLine(selVals, "#d97706") : "");
+      }
+
+      return `
+        <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">
+          <line x1="${pad.left}" y1="${pad.top + ch}" x2="${W - pad.right}" y2="${pad.top + ch}" stroke="var(--border)"/>
+          <line x1="${pad.left}" y1="${pad.top + ch / 2}" x2="${W - pad.right}" y2="${pad.top + ch / 2}" stroke="var(--border)" stroke-dasharray="3 3"/>
+          <text x="${pad.left - 6}" y="${pad.top + 4}" text-anchor="end" fill="var(--ink-3)" font-size="10.5">${fmt(maxV)}</text>
+          <text x="${pad.left - 6}" y="${pad.top + ch + 4}" text-anchor="end" fill="var(--ink-3)" font-size="10.5">0</text>
+          ${linesSvg}
+          ${TERMS.map((t, i) => `<text x="${xOf(i).toFixed(1)}" y="${H - 10}" text-anchor="middle" fill="var(--ink-2)" font-size="11">${esc(t.label)}</text>`).join("")}
+        </svg>
+      `;
+    }
+    const defaultChartMode = hasSelDepts ? "selected" : "all";
+    const trendSvg = buildModalTrendSvg(defaultChartMode);
 
     // Specialty table for targetTerm (pin selected depts in state.depts to the top!)
     const prevTermId = findComparablePrevTerm(targetTerm);
@@ -1371,13 +1392,23 @@
     document.getElementById("hospitalDialogBody").innerHTML = `
       <div>
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px">
-          <h3 class="modal-section-title" style="margin:0">2022–2027 시기별 TO 추이</h3>
-          <div class="card-legend">
-            <span class="legend-item"><span class="legend-dot" style="background:#0d9488"></span>레지던트</span>
-            <span class="legend-item"><span class="legend-dot" style="background:#4f46e5"></span>인턴</span>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <h3 class="modal-section-title" style="margin:0">2023–2027 시기별 TO 추이</h3>
+            ${hasSelDepts ? `
+              <div class="pill-group" id="hospModalChartMode" role="group" aria-label="차트 보기 전환">
+                <button type="button" class="pill is-active" data-hcm="selected">선택 과목 (${esc(selLabel)})</button>
+                <button type="button" class="pill" data-hcm="all">전체 레지던트·인턴</button>
+              </div>
+            ` : ""}
+          </div>
+          <div class="card-legend" id="hospModalLegend">
+            ${defaultChartMode === "selected"
+              ? `<span class="legend-item"><span class="legend-dot" style="background:#d97706"></span>${esc(selLabel)} TO (인턴 대비 %)</span>`
+              : `<span class="legend-item"><span class="legend-dot" style="background:#0d9488"></span>레지던트</span><span class="legend-item"><span class="legend-dot" style="background:#4f46e5"></span>인턴</span>${hasSelDepts ? `<span class="legend-item"><span class="legend-dot" style="background:#d97706"></span>${esc(selLabel)}</span>` : ""}`
+            }
           </div>
         </div>
-        ${trendSvg}
+        <div id="hospModalTrendWrap">${trendSvg}</div>
         ${internSummary}
       </div>
       <div>
@@ -1385,6 +1416,20 @@
         ${deptRowsHtml}
       </div>
     `;
+
+    const hcmWrap = document.getElementById("hospModalChartMode");
+    if (hcmWrap) {
+      hcmWrap.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-hcm]");
+        if (!btn) return;
+        const m = btn.dataset.hcm;
+        hcmWrap.querySelectorAll("[data-hcm]").forEach((b) => b.classList.toggle("is-active", b === btn));
+        document.getElementById("hospModalTrendWrap").innerHTML = buildModalTrendSvg(m);
+        document.getElementById("hospModalLegend").innerHTML = m === "selected"
+          ? `<span class="legend-item"><span class="legend-dot" style="background:#d97706"></span>${esc(selLabel)} TO (인턴 대비 %)</span>`
+          : `<span class="legend-item"><span class="legend-dot" style="background:#0d9488"></span>레지던트</span><span class="legend-item"><span class="legend-dot" style="background:#4f46e5"></span>인턴</span><span class="legend-item"><span class="legend-dot" style="background:#d97706"></span>${esc(selLabel)}</span>`;
+      });
+    }
 
     hospitalDialog.showModal();
   }
@@ -2212,36 +2257,66 @@
       <span class="badge">${esc(TERM_BY_ID[targetTerm]?.label || targetTerm)} 기준</span>
     `;
 
-    // Trend chart (Resident + Intern + Horizontal Quota reference line)
+    // Trend chart (supports switching between Selected Specialties vs Full School when state.depts.size > 0)
+    const hasSelDepts = state.depts.size > 0;
+    const selLabel = ratioDeptLabel();
     const resVals = TERMS.map((t) => schoolRecs.filter((r) => r.term === t.id && r.type === "resident").reduce((s, r) => s + r.to, 0));
     const intVals = TERMS.map((t) => schoolRecs.filter((r) => r.term === t.id && r.type === "intern").reduce((s, r) => s + r.to, 0));
-    const maxV = Math.max(sc.quota * 1.15, ...resVals, ...intVals, 10);
-    const W = 760, H = 200, pad = { top: 28, right: 44, bottom: 32, left: 46 };
-    const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
-    const xOf = (i) => pad.left + (TERMS.length === 1 ? cw / 2 : (i / (TERMS.length - 1)) * cw);
-    const yOf = (v) => pad.top + ch - (v / maxV) * ch;
+    const selVals = TERMS.map((t) => schoolRecs.filter((r) => r.term === t.id && r.type === "resident" && state.depts.has(r.dept)).reduce((s, r) => s + r.to, 0));
 
-    const makeLine = (vals, color) => {
-      const pts = vals.map((v, i) => [xOf(i), yOf(v)]);
-      const d = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
-      return `<path d="${d}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round"/>` +
-        pts.map(([x, y], i) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="${color}" stroke="var(--surface)" stroke-width="1.5"/>` +
-          (vals[i] > 0 ? `<text x="${x.toFixed(1)}" y="${(y - 8).toFixed(1)}" text-anchor="middle" fill="${color}" font-size="10.5" font-weight="700">${vals[i]}</text>` : "")
-        ).join("");
-    };
-    const qY = yOf(sc.quota).toFixed(1);
-    const trendSvg = `
-      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">
-        <line x1="${pad.left}" y1="${pad.top + ch}" x2="${W - pad.right}" y2="${pad.top + ch}" stroke="var(--border)"/>
-        <line x1="${pad.left}" y1="${qY}" x2="${W - pad.right}" y2="${qY}" stroke="var(--amber)" stroke-dasharray="5 4" stroke-width="1.5"/>
-        <text x="${W - pad.right}" y="${(Number(qY) - 5).toFixed(1)}" text-anchor="end" fill="var(--amber)" font-size="10.5" font-weight="700">의대 정원 ${sc.quota}명</text>
-        <text x="${pad.left - 6}" y="${pad.top + 4}" text-anchor="end" fill="var(--ink-3)" font-size="10.5">${fmt(Math.round(maxV))}</text>
-        <text x="${pad.left - 6}" y="${pad.top + ch + 4}" text-anchor="end" fill="var(--ink-3)" font-size="10.5">0</text>
-        ${makeLine(resVals, "#0d9488")}
-        ${makeLine(intVals, "#4f46e5")}
-        ${TERMS.map((t, i) => `<text x="${xOf(i).toFixed(1)}" y="${H - 10}" text-anchor="middle" fill="var(--ink-2)" font-size="11">${esc(t.label)}</text>`).join("")}
-      </svg>
-    `;
+    function buildSchoolTrendSvg(mode) {
+      const W = 760, H = 200, pad = { top: 28, right: 44, bottom: 32, left: 46 };
+      const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
+      const xOf = (i) => pad.left + (TERMS.length === 1 ? cw / 2 : (i / (TERMS.length - 1)) * cw);
+      const maxV = mode === "selected"
+        ? Math.max(4, ...selVals)
+        : Math.max(sc.quota * 1.15, ...resVals, ...intVals, 10);
+      const yOf = (v) => pad.top + ch - (v / maxV) * ch;
+
+      const makeLine = (vals, color, showZero = false, subLabels = null) => {
+        const pts = vals.map((v, i) => [xOf(i), yOf(v)]);
+        const d = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
+        return `<path d="${d}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round"/>` +
+          pts.map(([x, y], i) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.2" fill="${color}" stroke="var(--surface)" stroke-width="1.5"/>` +
+            ((showZero || vals[i] > 0) ? `<text x="${x.toFixed(1)}" y="${(y - 9).toFixed(1)}" text-anchor="middle" fill="${color}" font-size="11" font-weight="750">${vals[i]}${subLabels && subLabels[i] ? ` (${subLabels[i]})` : ""}</text>` : "")
+          ).join("");
+      };
+
+      if (mode === "selected") {
+        const pctSubs = selVals.map((v) => `${((v / sc.quota) * 100).toFixed(1)}%`);
+        const pts = selVals.map((v, i) => [xOf(i), yOf(v)]);
+        const dArea = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ") +
+          ` L${pts[pts.length - 1][0].toFixed(1)},${(pad.top + ch).toFixed(1)} L${pts[0][0].toFixed(1)},${(pad.top + ch).toFixed(1)} Z`;
+        return `
+          <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">
+            <line x1="${pad.left}" y1="${pad.top + ch}" x2="${W - pad.right}" y2="${pad.top + ch}" stroke="var(--border)"/>
+            <line x1="${pad.left}" y1="${pad.top + ch / 2}" x2="${W - pad.right}" y2="${pad.top + ch / 2}" stroke="var(--border)" stroke-dasharray="3 3"/>
+            <text x="${pad.left - 6}" y="${pad.top + 4}" text-anchor="end" fill="var(--ink-3)" font-size="10.5">${fmt(Math.round(maxV))}</text>
+            <text x="${pad.left - 6}" y="${pad.top + ch + 4}" text-anchor="end" fill="var(--ink-3)" font-size="10.5">0</text>
+            <path d="${dArea}" fill="#d97706" fill-opacity="0.12"/>
+            ${makeLine(selVals, "#d97706", true, pctSubs)}
+            ${TERMS.map((t, i) => `<text x="${xOf(i).toFixed(1)}" y="${H - 10}" text-anchor="middle" fill="var(--ink-2)" font-size="11">${esc(t.label)}</text>`).join("")}
+          </svg>
+        `;
+      }
+
+      const qY = yOf(sc.quota).toFixed(1);
+      return `
+        <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">
+          <line x1="${pad.left}" y1="${pad.top + ch}" x2="${W - pad.right}" y2="${pad.top + ch}" stroke="var(--border)"/>
+          <line x1="${pad.left}" y1="${qY}" x2="${W - pad.right}" y2="${qY}" stroke="var(--amber)" stroke-dasharray="5 4" stroke-width="1.5"/>
+          <text x="${W - pad.right}" y="${(Number(qY) - 5).toFixed(1)}" text-anchor="end" fill="var(--amber)" font-size="10.5" font-weight="700">의대 정원 ${sc.quota}명</text>
+          <text x="${pad.left - 6}" y="${pad.top + 4}" text-anchor="end" fill="var(--ink-3)" font-size="10.5">${fmt(Math.round(maxV))}</text>
+          <text x="${pad.left - 6}" y="${pad.top + ch + 4}" text-anchor="end" fill="var(--ink-3)" font-size="10.5">0</text>
+          ${makeLine(resVals, "#0d9488")}
+          ${makeLine(intVals, "#4f46e5")}
+          ${hasSelDepts ? makeLine(selVals, "#d97706") : ""}
+          ${TERMS.map((t, i) => `<text x="${xOf(i).toFixed(1)}" y="${H - 10}" text-anchor="middle" fill="var(--ink-2)" font-size="11">${esc(t.label)}</text>`).join("")}
+        </svg>
+      `;
+    }
+    const defaultScMode = hasSelDepts ? "selected" : "all";
+    const trendSvg = buildSchoolTrendSvg(defaultScMode);
 
     // Per-hospital contribution in targetTerm
     const roles = sc.roles || {};
@@ -2269,14 +2344,23 @@
     document.getElementById("schoolDialogBody").innerHTML = `
       <div>
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px">
-          <h3 class="modal-section-title" style="margin:0">2022–2027 부속·협력병원 합산 TO 추이 vs 의대 정원</h3>
-          <div class="card-legend">
-            <span class="legend-item"><span class="legend-dot" style="background:#0d9488"></span>레지던트 합계</span>
-            <span class="legend-item"><span class="legend-dot" style="background:#4f46e5"></span>인턴 합계</span>
-            <span class="legend-item"><span class="legend-dot" style="background:var(--amber)"></span>의대 정원 (${sc.quota}명)</span>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <h3 class="modal-section-title" style="margin:0">2023–2027 부속·협력병원 합산 TO 추이</h3>
+            ${hasSelDepts ? `
+              <div class="pill-group" id="schoolModalChartMode" role="group" aria-label="차트 보기 전환">
+                <button type="button" class="pill is-active" data-scm="selected">선택 과목 (${esc(selLabel)})</button>
+                <button type="button" class="pill" data-scm="all">전체 합산 vs 정원</button>
+              </div>
+            ` : ""}
+          </div>
+          <div class="card-legend" id="schoolModalLegend">
+            ${defaultScMode === "selected"
+              ? `<span class="legend-item"><span class="legend-dot" style="background:#d97706"></span>${esc(selLabel)} 합산 (의대 정원 대비 %)</span>`
+              : `<span class="legend-item"><span class="legend-dot" style="background:#0d9488"></span>레지던트 합계</span><span class="legend-item"><span class="legend-dot" style="background:#4f46e5"></span>인턴 합계</span><span class="legend-item"><span class="legend-dot" style="background:var(--amber)"></span>의대 정원 (${sc.quota}명)</span>`
+            }
           </div>
         </div>
-        ${trendSvg}
+        <div id="schoolModalTrendWrap">${trendSvg}</div>
       </div>
 
       <div class="school-modal-grid">
@@ -2323,6 +2407,20 @@
         </div>
       </div>
     `;
+
+    const scmWrap = document.getElementById("schoolModalChartMode");
+    if (scmWrap) {
+      scmWrap.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-scm]");
+        if (!btn) return;
+        const m = btn.dataset.scm;
+        scmWrap.querySelectorAll("[data-scm]").forEach((b) => b.classList.toggle("is-active", b === btn));
+        document.getElementById("schoolModalTrendWrap").innerHTML = buildSchoolTrendSvg(m);
+        document.getElementById("schoolModalLegend").innerHTML = m === "selected"
+          ? `<span class="legend-item"><span class="legend-dot" style="background:#d97706"></span>${esc(selLabel)} 합산 (의대 정원 대비 %)</span>`
+          : `<span class="legend-item"><span class="legend-dot" style="background:#0d9488"></span>레지던트 합계</span><span class="legend-item"><span class="legend-dot" style="background:#4f46e5"></span>인턴 합계</span><span class="legend-item"><span class="legend-dot" style="background:var(--amber)"></span>의대 정원 (${sc.quota}명)</span>`;
+      });
+    }
 
     document.getElementById("schoolDialogBody").querySelectorAll("[data-jump-hosp]").forEach((btn) => {
       btn.addEventListener("click", () => {
